@@ -26,7 +26,6 @@ import {
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
-import ProfileModal from '../../components/profile/ProfileModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

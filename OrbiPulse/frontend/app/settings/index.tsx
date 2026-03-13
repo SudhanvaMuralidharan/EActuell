@@ -63,24 +63,11 @@ export default function SettingsScreen() {
             value={user?.name || 'Set Name'}
             onPress={() => router.push('/settings/profile')}
           />
-          <SettingItem
-            icon="phone-portrait-outline"
-            label="Phone Number"
-            value={user?.phone || 'Not linked'}
-            color={COLORS.secondary}
-          />
         </View>
         
         {/* System Section */}
         <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>PREFERENCES</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <SettingItem
-            icon="color-palette-outline"
-            label="Dark Mode"
-            value={isDark ? 'On' : 'Off'}
-            onPress={toggleTheme}
-            color={COLORS.accent}
-          />
           <SettingItem
             icon="language-outline"
             label="Language"

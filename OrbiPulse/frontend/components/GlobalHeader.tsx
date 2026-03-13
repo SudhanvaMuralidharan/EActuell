@@ -45,6 +45,7 @@ export default function GlobalHeader() {
         onClose={() => setProfileVisible(false)}
         onNavigateSettings={() => router.push('/settings' as any)}
         onNavigateAbout={() => router.push('/about' as any)}
+        onNavigateProfile={() => router.push('/settings/profile' as any)}
       />
     </>
   );

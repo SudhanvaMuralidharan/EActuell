@@ -17,6 +17,7 @@ export interface ProfileModalProps {
   onClose: () => void;
   onNavigateSettings: () => void;
   onNavigateAbout: () => void;
+  onNavigateProfile: () => void;
 }
 
 export default function ProfileModal({
@@ -24,10 +25,11 @@ export default function ProfileModal({
   onClose,
   onNavigateSettings,
   onNavigateAbout,
+  onNavigateProfile,
 }: ProfileModalProps) {
   const { colors, toggleTheme, isDark, showTelemetry, toggleTelemetry } = useTheme();
   const { user, logout } = useAuth();
-  
+
   const handleLogout = async () => {
     await logout();
     onClose();
@@ -40,14 +42,21 @@ export default function ProfileModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      {/* Transparent overlay to detect taps outside */}
-      <TouchableOpacity 
-        style={styles.overlay} 
+      {/* Overlay */}
+      <TouchableOpacity
+        style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}
       >
-        {/* Floating dropdown panel */}
-        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[styles.dropdownContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {/* Dropdown Panel */}
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()}
+          style={[
+            styles.dropdownContainer,
+            { backgroundColor: colors.card, borderColor: colors.border }
+          ]}
+        >
           {/* User Info Section */}
           <View style={styles.userInfoSection}>
             <View style={styles.avatarWrapper}>
@@ -61,7 +70,7 @@ export default function ProfileModal({
           
           {/* Divider */}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          
+
           {/* Menu Options */}
           <View style={styles.menuOptions}>
             <ProfileMenuItem
@@ -73,15 +82,24 @@ export default function ProfileModal({
               }}
               color={COLORS.primary}
             />
-            
-            {/* Theme Toggle Inline */}
+
+            {/* Theme Toggle */}
             <View style={styles.themeRow}>
               <View style={styles.themeIconWrapper}>
-                <Ionicons name={isDark ? "moon-outline" : "sunny-outline"} size={20} color={COLORS.secondary} />
+                <Ionicons
+                  name={isDark ? "moon-outline" : "sunny-outline"}
+                  size={20}
+                  color={COLORS.secondary}
+                />
               </View>
-              <Text style={[styles.menuLabel, { color: colors.text }]}>{isDark ? 'Dark' : 'Light'}</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>
+                {isDark ? 'Dark' : 'Light'}
+              </Text>
               <TouchableOpacity
-                style={[styles.themeToggle, isDark ? styles.themeToggleActive : styles.themeToggleInactive]}
+                style={[
+                  styles.themeToggle,
+                  isDark ? styles.themeToggleActive : styles.themeToggleInactive
+                ]}
                 onPress={toggleTheme}
               >
                 <View style={[styles.themeToggleBg, isDark && styles.themeToggleBgActive]}>
@@ -89,15 +107,20 @@ export default function ProfileModal({
                 </View>
               </TouchableOpacity>
             </View>
-            
-            {/* Telemetry Toggle Inline */}
+
+            {/* Telemetry Toggle */}
             <View style={styles.themeRow}>
               <View style={styles.themeIconWrapper}>
                 <Ionicons name="pulse-outline" size={20} color={COLORS.secondary} />
               </View>
-              <Text style={[styles.menuLabel, { color: colors.text }]}>Telemetry</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>
+                Telemetry
+              </Text>
               <TouchableOpacity
-                style={[styles.themeToggle, showTelemetry ? styles.themeToggleActive : styles.themeToggleInactive]}
+                style={[
+                  styles.themeToggle,
+                  showTelemetry ? styles.themeToggleActive : styles.themeToggleInactive
+                ]}
                 onPress={toggleTelemetry}
               >
                 <View style={[styles.themeToggleBg, showTelemetry && styles.themeToggleBgActive]}>
@@ -105,7 +128,7 @@ export default function ProfileModal({
                 </View>
               </TouchableOpacity>
             </View>
-            
+
             <ProfileMenuItem
               icon="information-circle-outline"
               label="About"
@@ -115,9 +138,9 @@ export default function ProfileModal({
               }}
               color={colors.textSecondary}
             />
-            
+
             <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: 8 }]} />
-            
+
             <ProfileMenuItem
               icon="log-out-outline"
               label="Log Out"
@@ -125,6 +148,7 @@ export default function ProfileModal({
               color={COLORS.danger}
             />
           </View>
+
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
@@ -149,6 +173,10 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
   },
+  divider: {
+    height: 1,
+    marginHorizontal: 16,
+  },
   userInfoSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -170,10 +198,6 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 13,
-  },
-  divider: {
-    height: 1,
-    marginHorizontal: 16,
   },
   menuOptions: {
     paddingVertical: 8,
