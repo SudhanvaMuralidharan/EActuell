@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { COLORS } from '../constants/theme';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { AuthProvider } from '../context/AuthContext';
+import { ValveProvider } from '../context/ValveContext';
 
 function RootContent() {
   const { colors, isDark } = useTheme();
@@ -32,7 +33,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <RootContent />
+        <ValveProvider>
+          <RootContent />
+        </ValveProvider>
       </AuthProvider>
     </ThemeProvider>
   );

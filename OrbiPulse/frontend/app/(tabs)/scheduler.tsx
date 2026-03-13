@@ -122,16 +122,12 @@ export default function SchedulerScreen() {
   const todaySchedules = schedules.filter((s) => s.enabled && s.days.includes(todayAbbr));
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: colors.text }]}>Irrigation</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Farmer Scheduler</Text>
-          </View>
+        {/* Page Action Bar */}
+        <View style={styles.actionHeader}>
           <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
-            <Ionicons name="add" size={20} color={Colors.bg} />
+            <Ionicons name="add" size={20} color={COLORS.white} />
             <Text style={styles.addBtnText}>New Schedule</Text>
           </TouchableOpacity>
         </View>
@@ -401,9 +397,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'baseline',
     padding: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  actionHeader: {
+    flexDirection: 'row-reverse',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   title: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.textPrimary },
   subtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 1 },

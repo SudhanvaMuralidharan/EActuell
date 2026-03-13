@@ -1,12 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
@@ -22,6 +20,7 @@ import {
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useValves } from '../../context/ValveContext';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 
@@ -35,21 +34,10 @@ interface LocalValveState {
 
 export default function ControlScreen() {
   const { colors } = useTheme();
-  const [states, setStates] = useState<Record<string, LocalValveState>>(() => {
-    const init: Record<string, LocalValveState> = {};
-    VALVES.forEach((v) => {
-      init[v.device_id] = {
-        position: v.valve_position,
-        status: v.status,
-        pending: false,
-      };
-    });
-    return init;
-  });
+  const { states, cmdLog, openValve, closeValve, setValvePosition } = useValves();
 
   const [selectedId, setSelectedId] = useState<string>(VALVES[0].device_id);
   const [sliderVal, setSliderVal] = useState<number>(VALVES[0].valve_position);
-  const [cmdLog, setCmdLog] = useState<string[]>([]);
 
   const activeValve = VALVES.find((v) => v.device_id === selectedId)!;
   const activeState = states[selectedId]!;
@@ -59,68 +47,16 @@ export default function ControlScreen() {
     setSliderVal(states[valve.device_id]?.position ?? valve.valve_position);
   };
 
-  const simulateCommand = (
-    valveId: string,
-    command: string,
-    newPosition: number,
-    newStatus: ValveStatus,
-  ) => {
-    const valve = VALVES.find((v) => v.device_id === valveId)!;
-    if (valve.status === 'offline' || valve.status === 'fault') {
-      Alert.alert(
-        'Command Blocked',
-        `${valve.name} is ${valve.status}. Cannot send command.`,
-        [{ text: 'OK' }],
-      );
-      return;
-    }
-
-    // Set pending
-    setStates((prev) => ({
-      ...prev,
-      [valveId]: { ...prev[valveId], pending: true },
-    }));
-
-    const logEntry = `[${new Date().toLocaleTimeString()}] ${valveId} → ${command}`;
-    setCmdLog((prev) => [logEntry, ...prev.slice(0, 19)]);
-
-    // Simulate network round-trip (800–1500ms)
-    const delay = 800 + Math.random() * 700;
-    setTimeout(() => {
-      const success = Math.random() > 0.08; // 92% success rate
-      setStates((prev) => ({
-        ...prev,
-        [valveId]: {
-          position: success ? newPosition : prev[valveId].position,
-          status: success ? newStatus : prev[valveId].status,
-          pending: false,
-          lastCmd: command,
-          lastCmdTime: new Date().toLocaleTimeString(),
-        },
-      }));
-      const ackEntry = success
-        ? `[${new Date().toLocaleTimeString()}] ✓ ACK: ${valveId} ${command}`
-        : `[${new Date().toLocaleTimeString()}] ✗ NACK: ${valveId} ${command} — retry?`;
-      setCmdLog((prev) => [ackEntry, ...prev.slice(0, 19)]);
-    }, delay);
-  };
-
-  const handleOpen  = () => simulateCommand(selectedId, 'OPEN  100%', 100, 'open');
-  const handleClose = () => simulateCommand(selectedId, 'CLOSE 0%',  0,   'closed');
-  const handleSet   = () => simulateCommand(selectedId, `SET   ${Math.round(sliderVal)}%`, Math.round(sliderVal), sliderVal > 0 && sliderVal < 100 ? 'partial' : sliderVal === 100 ? 'open' : 'closed');
+  const handleOpen  = () => { openValve(selectedId); setSliderVal(100); };
+  const handleClose = () => { closeValve(selectedId); setSliderVal(0); };
+  const handleSet   = () => setValvePosition(selectedId, sliderVal);
 
   const isControllable = activeState.status !== 'offline' && activeState.status !== 'fault';
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Valve Control</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Remote valve operation</Text>
-        </View>
-
-        {/* Valve picker */}
+        {/* Device select */}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SELECT VALVE</Text>
         <ScrollView
           horizontal
