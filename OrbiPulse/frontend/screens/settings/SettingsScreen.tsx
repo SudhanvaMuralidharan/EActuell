@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, Spacing, Radius, FontSize } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 interface SettingItemProps {
   icon: string;
@@ -20,19 +21,20 @@ interface SettingItemProps {
 }
 
 function SettingItem({ icon, label, value, onPress, color = COLORS.primary }: SettingItemProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={[styles.iconContainer, { backgroundColor: color + '22' }]}>
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
-      <Text style={styles.settingLabel}>{label}</Text>
+      <Text style={[styles.settingLabel, { color: colors.text }]}>{label}</Text>
       {value ? (
         <View style={styles.valueContainer}>
-          <Text style={styles.settingValue}>{value}</Text>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.dark} />
+          <Text style={[styles.settingValue, { color: colors.text }]}>{value}</Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.border} />
         </View>
       ) : (
-        <Ionicons name="chevron-forward" size={20} color={COLORS.dark} />
+        <Ionicons name="chevron-forward" size={20} color={colors.border} />
       )}
     </TouchableOpacity>
   );
@@ -40,21 +42,22 @@ function SettingItem({ icon, label, value, onPress, color = COLORS.primary }: Se
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { toggleTheme, isDark, colors } = useTheme();
   
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
         <View style={{ width: 24 }} />
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
-        <Text style={styles.sectionLabel}>ACCOUNT</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionLabel, { color: colors.text, opacity: 0.7 }]}>ACCOUNT</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="person-outline"
             label="Profile Information"
@@ -77,8 +80,8 @@ export default function SettingsScreen() {
         </View>
         
         {/* Notifications Section */}
-        <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionLabel, { color: colors.text, opacity: 0.7 }]}>NOTIFICATIONS</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="notifications-outline"
             label="Push Notifications"
@@ -102,8 +105,15 @@ export default function SettingsScreen() {
         </View>
         
         {/* System Section */}
-        <Text style={styles.sectionLabel}>SYSTEM</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionLabel, { color: colors.text, opacity: 0.7 }]}>SYSTEM</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <SettingItem
+            icon="color-palette-outline"
+            label="Theme"
+            value={isDark ? 'Dark' : 'Light'}
+            onPress={toggleTheme}
+            color={COLORS.primary}
+          />
           <SettingItem
             icon="language-outline"
             label="Language"
@@ -126,8 +136,8 @@ export default function SettingsScreen() {
         </View>
         
         {/* Support Section */}
-        <Text style={styles.sectionLabel}>SUPPORT</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionLabel, { color: colors.text, opacity: 0.7 }]}>SUPPORT</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="help-circle-outline"
             label="Help Center"
