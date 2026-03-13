@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VALVES, Valve, ValveStatus } from '../data/mockData';
 
 export interface ValveState {
@@ -11,12 +12,14 @@ export interface ValveState {
 }
 
 interface ValveContextType {
+  valves: Valve[];
   states: Record<string, ValveState>;
   cmdLog: string[];
   sendCommand: (valveId: string, command: string, newPosition: number, newStatus: ValveStatus) => void;
   openValve: (valveId: string) => void;
   closeValve: (valveId: string) => void;
   setValvePosition: (valveId: string, position: number) => void;
+  addValve: (newValve: Valve) => Promise<void>;
   openCount: number;
   faultCount: number;
   offlineCount: number;
@@ -24,21 +27,48 @@ interface ValveContextType {
 
 const ValveContext = createContext<ValveContextType | undefined>(undefined);
 
-function initStates(): Record<string, ValveState> {
-  const init: Record<string, ValveState> = {};
-  VALVES.forEach((v) => {
-    init[v.device_id] = {
-      position: v.valve_position,
-      status: v.status,
-      pending: false,
-    };
-  });
-  return init;
-}
+const VALVES_STORAGE_KEY = '@orbipulse_valves';
 
 export function ValveProvider({ children }: { children: ReactNode }) {
-  const [states, setStates] = useState<Record<string, ValveState>>(initStates);
+  const [valves, setValves] = useState<Valve[]>([]);
+  const [states, setStates] = useState<Record<string, ValveState>>({});
   const [cmdLog, setCmdLog] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load valves from storage or initial mock data
+  useEffect(() => {
+    const loadValves = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(VALVES_STORAGE_KEY);
+        let currentValves = VALVES;
+        if (stored) {
+          currentValves = JSON.parse(stored);
+        } else {
+          await AsyncStorage.setItem(VALVES_STORAGE_KEY, JSON.stringify(VALVES));
+        }
+        
+        setValves(currentValves);
+        
+        // Init states
+        const init: Record<string, ValveState> = {};
+        currentValves.forEach((v) => {
+          init[v.device_id] = {
+            position: v.valve_position,
+            status: v.status,
+            pending: false,
+          };
+        });
+        setStates(init);
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to load valves:', error);
+        setValves(VALVES);
+        setIsInitialized(true);
+      }
+    };
+
+    loadValves();
+  }, []);
 
   const sendCommand = (
     valveId: string,
@@ -46,7 +76,7 @@ export function ValveProvider({ children }: { children: ReactNode }) {
     newPosition: number,
     newStatus: ValveStatus,
   ) => {
-    const valve = VALVES.find((v) => v.device_id === valveId);
+    const valve = valves.find((v) => v.device_id === valveId);
     if (!valve) return;
 
     if (valve.status === 'offline' || valve.status === 'fault') {
@@ -74,8 +104,8 @@ export function ValveProvider({ children }: { children: ReactNode }) {
       setStates((prev) => ({
         ...prev,
         [valveId]: {
-          position: success ? newPosition : prev[valveId].position,
-          status: success ? newStatus : prev[valveId].status,
+          position: success ? newPosition : (prev[valveId]?.position ?? 0),
+          status: success ? newStatus : (prev[valveId]?.status ?? 'closed'),
           pending: false,
           lastCmd: command,
           lastCmdTime: new Date().toLocaleTimeString(),
@@ -100,18 +130,34 @@ export function ValveProvider({ children }: { children: ReactNode }) {
     sendCommand(valveId, `SET   ${pos}%`, pos, status);
   };
 
+  const addValve = async (newValve: Valve) => {
+    const updatedValves = [newValve, ...valves];
+    setValves(updatedValves);
+    setStates((prev) => ({
+      ...prev,
+      [newValve.device_id]: {
+        position: newValve.valve_position,
+        status: newValve.status,
+        pending: false,
+      },
+    }));
+    await AsyncStorage.setItem(VALVES_STORAGE_KEY, JSON.stringify(updatedValves));
+  };
+
   const openCount = Object.values(states).filter(s => s.status === 'open').length;
   const faultCount = Object.values(states).filter(s => s.status === 'fault').length;
   const offlineCount = Object.values(states).filter(s => s.status === 'offline').length;
 
   return (
     <ValveContext.Provider value={{ 
+      valves,
       states, 
       cmdLog, 
       sendCommand, 
       openValve, 
       closeValve, 
       setValvePosition,
+      addValve,
       openCount,
       faultCount,
       offlineCount

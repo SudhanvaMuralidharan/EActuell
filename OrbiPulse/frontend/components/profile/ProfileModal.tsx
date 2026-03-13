@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import ProfileMenuItem from './ProfileMenuItem';
@@ -25,6 +26,7 @@ export default function ProfileModal({
   onNavigateSettings,
   onNavigateAbout,
 }: ProfileModalProps) {
+  const router = useRouter();
   const { colors, toggleTheme, isDark, showTelemetry, toggleTelemetry } = useTheme();
   const { user, logout } = useAuth();
   
@@ -65,11 +67,20 @@ export default function ProfileModal({
           {/* Menu Options */}
           <View style={styles.menuOptions}>
             <ProfileMenuItem
+              icon="plus-circle-outline"
+              label="Add New Valve"
+              onPress={() => {
+                onClose();
+                router.push('/settings/add-valve' as any);
+              }}
+              color={COLORS.primary}
+            />
+            <ProfileMenuItem
               icon="settings-outline"
               label="Settings"
               onPress={() => {
                 onClose();
-                onNavigateSettings();
+                router.push('/settings' as any);
               }}
               color={COLORS.primary}
             />

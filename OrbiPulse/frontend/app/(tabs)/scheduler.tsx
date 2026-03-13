@@ -14,31 +14,32 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import {
-  VALVES,
   INITIAL_SCHEDULES,
   IrrigationSchedule,
   DAYS_OF_WEEK,
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useValves } from '../../context/ValveContext';
 
 let nextId = 10;
 
 export default function SchedulerScreen() {
   const { colors } = useTheme();
+  const { valves } = useValves();
   const [schedules, setSchedules] = useState<IrrigationSchedule[]>(INITIAL_SCHEDULES);
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<IrrigationSchedule | null>(null);
 
   // Form state
-  const [formValveId, setFormValveId]     = useState(VALVES[0].device_id);
+  const [formValveId, setFormValveId]     = useState(valves[0]?.device_id || '');
   const [formStartTime, setFormStartTime] = useState('06:00');
   const [formDuration, setFormDuration]   = useState('30');
   const [formDays, setFormDays]           = useState<string[]>(['Mon', 'Wed', 'Fri']);
 
   const openCreate = () => {
     setEditTarget(null);
-    setFormValveId(VALVES[0].device_id);
+    setFormValveId(valves[0]?.device_id || '');
     setFormStartTime('06:00');
     setFormDuration('30');
     setFormDays(['Mon', 'Wed', 'Fri']);
@@ -68,7 +69,7 @@ export default function SchedulerScreen() {
       Alert.alert('No days selected', 'Please select at least one day');
       return;
     }
-    const valve = VALVES.find((v) => v.device_id === formValveId)!;
+    const valve = valves.find((v) => v.device_id === formValveId)!;
 
     if (editTarget) {
       setSchedules((prev) =>
@@ -201,7 +202,7 @@ export default function SchedulerScreen() {
             {/* Valve selection */}
             <Text style={styles.fieldLabel}>Valve</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.valveScroll}>
-              {VALVES.filter((v) => v.status !== 'offline').map((v) => (
+              {valves.filter((v) => v.status !== 'offline').map((v) => (
                 <TouchableOpacity
                   key={v.device_id}
                   style={[
@@ -280,7 +281,7 @@ export default function SchedulerScreen() {
             <View style={styles.previewBox}>
               <Text style={styles.previewLabel}>Schedule Preview</Text>
               <Text style={styles.previewText}>
-                {VALVES.find((v) => v.device_id === formValveId)?.name} will open at{' '}
+                {valves.find((v) => v.device_id === formValveId)?.name} will open at{' '}
                 <Text style={{ color: Colors.accent }}>{formStartTime}</Text> for{' '}
                 <Text style={{ color: Colors.accent }}>{formDuration} min</Text> on{' '}
                 <Text style={{ color: Colors.accent }}>{formDays.join(', ') || '—'}</Text>
