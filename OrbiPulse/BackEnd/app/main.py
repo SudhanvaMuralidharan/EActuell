@@ -1,33 +1,102 @@
-from fastapi import FastAPI, Depends
-from .database import engine, Base
-from .routes import auth_routes, plot_routes, valve_routes, telemetry_routes, alert_routes, schedule_routes
-from .config.settings import APP_NAME, APP_VERSION
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from config.settings import get_settings
+from routes import (
+    auth_routes,
+    plot_routes,
+    valve_routes,
+    telemetry_routes,
+    alert_routes,
+    schedule_routes,
+    ai_routes,
+)
+from services.alert_service import run_full_evaluation
+
+settings = get_settings()
+
+# ---------------------------------------------------------------------------
+# Application factory
+# ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title=APP_NAME,
-    description="Backend API for smart irrigation monitoring with AI-powered analytics",
-    version=APP_VERSION
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="""
+## 🌱 OrbiPulse – Smart Irrigation Monitoring API
+
+A backend API for monitoring and controlling smart irrigation valves
+installed across agricultural plots.
+
+### Features
+- **JWT Authentication** — secure token-based access
+- **Plot Management** — create and manage geo-referenced agricultural plots
+- **Valve Management** — register, control (open/close), and monitor valves
+- **Telemetry Monitoring** — stream and query sensor readings
+- **Alert System** — threshold-based alerts with acknowledgement
+- **Irrigation Scheduling** — recurring schedules per valve
+- **AI Insights** — 4-stage pipeline: analyze → detect anomalies → decide → recommend
+
+### Demo Credentials
+| Username | Password |
+|----------|----------|
+| farmer1  | pass123  |
+| farmer2  | pass123  |
+
+Use the **Authorize** button (🔒) above with:
+`username: farmer1`, `password: pass123`
+""",
+    contact={"name": "OrbiPulse Team", "email": "dev@orbipulse.io"},
+    license_info={"name": "MIT"},
 )
 
-# Include routers
+# ---------------------------------------------------------------------------
+# CORS — allow all origins for development (tighten in production)
+# ---------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------------------------
+# Routers
+# ---------------------------------------------------------------------------
 app.include_router(auth_routes.router)
 app.include_router(plot_routes.router)
 app.include_router(valve_routes.router)
 app.include_router(telemetry_routes.router)
 app.include_router(alert_routes.router)
 app.include_router(schedule_routes.router)
+app.include_router(ai_routes.router)
 
-@app.get("/")
-def read_root():
+
+# ---------------------------------------------------------------------------
+# Startup
+# ---------------------------------------------------------------------------
+@app.on_event("startup")
+def on_startup():
+    """Pre-populate alerts from dataset on startup."""
+    run_full_evaluation()
+    print(f"✅ {settings.APP_NAME} v{settings.APP_VERSION} started")
+    print("📖 Swagger docs → http://localhost:8000/docs")
+
+
+# ---------------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------------
+@app.get("/", tags=["Health"], summary="API health check")
+def root():
     return {
-        "message": "Smart Irrigation Monitoring System API",
-        "version": APP_VERSION,
-        "docs": "/docs"
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "docs": "/docs",
     }
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+
+@app.get("/health", tags=["Health"], summary="Liveness probe")
+def health():
+    return {"status": "ok"}
