@@ -5,11 +5,11 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import ProfileMenuItem from './ProfileMenuItem';
 
 export interface ProfileModalProps {
   visible: boolean;
@@ -18,31 +18,11 @@ export interface ProfileModalProps {
   onNavigateAbout: () => void;
 }
 
-interface ProfileOptionProps {
-  icon: string;
-  label: string;
-  onPress: () => void;
-  color?: string;
-}
-
 // Mock user data - replace with actual user data from auth context
 const USER_DATA = {
   name: 'John Doe',
   email: 'john.doe@farm.com',
-  role: 'Farm Manager',
 };
-
-function ProfileOption({ icon, label, onPress, color = COLORS.primary }: ProfileOptionProps) {
-  return (
-    <TouchableOpacity style={styles.optionRow} onPress={onPress}>
-      <View style={[styles.optionIconContainer, { backgroundColor: color + '22' }]}>
-        <Ionicons name={icon as any} size={20} color={color} />
-      </View>
-      <Text style={styles.optionLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={20} color={COLORS.dark} />
-    </TouchableOpacity>
-  );
-}
 
 export default function ProfileModal({
   visible,
@@ -55,73 +35,61 @@ export default function ProfileModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
+      {/* Transparent overlay to detect taps outside */}
+      <TouchableOpacity 
+        style={styles.overlay} 
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        {/* Floating dropdown panel */}
+        <View style={styles.dropdownContainer} pointerEvents="box-only">
+          {/* User Info Section */}
+          <View style={styles.userInfoSection}>
+            <View style={styles.avatarWrapper}>
+              <Ionicons name="person-circle" size={40} color={COLORS.primary} />
+            </View>
+            <View style={styles.userDetails}>
               <Text style={styles.userName}>{USER_DATA.name}</Text>
-              <Text style={styles.userRole}>{USER_DATA.role}</Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={COLORS.dark} />
-            </TouchableOpacity>
-          </View>
-          
-          {/* User Info Card */}
-          <View style={styles.userInfoCard}>
-            <View style={styles.avatarContainer}>
-              <Ionicons name="person-circle" size={60} color={COLORS.primary} />
-            </View>
-            <View style={styles.userInfo}>
               <Text style={styles.userEmail}>{USER_DATA.email}</Text>
-              <View style={styles.accountBadge}>
-                <Text style={styles.accountBadgeText}>Pro Account</Text>
-              </View>
             </View>
           </View>
           
-          {/* Options */}
-          <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-            <Text style={styles.sectionLabel}>MENU</Text>
-            
-            <ProfileOption
+          {/* Divider */}
+          <View style={styles.divider} />
+          
+          {/* Menu Options */}
+          <View style={styles.menuOptions}>
+            <ProfileMenuItem
               icon="settings-outline"
               label="Settings"
               onPress={() => {
                 onClose();
                 onNavigateSettings();
               }}
+              color={COLORS.primary}
             />
             
-            <ProfileOption
-              icon="color-palette-outline"
-              label="Theme"
-              onPress={() => {}}
-              color={COLORS.secondary}
-            />
-            
-            {/* Theme Toggle */}
-            <View style={styles.themeToggleRow}>
-              <View style={styles.optionRow}>
-                <View style={[styles.optionIconContainer, { backgroundColor: COLORS.accent + '22' }]}>
-                  <Ionicons name="moon-outline" size={20} color={COLORS.accent} />
-                </View>
-                <Text style={styles.optionLabel}>Dark Mode</Text>
+            {/* Theme Toggle Inline */}
+            <View style={styles.themeRow}>
+              <View style={styles.themeIconWrapper}>
+                <Ionicons name="color-palette-outline" size={20} color={COLORS.secondary} />
               </View>
+              <Text style={styles.menuLabel}>Theme</Text>
               <TouchableOpacity
-                style={[styles.toggleSwitch, isDark && styles.toggleSwitchActive]}
+                style={[styles.themeToggle, !isDark && styles.themeToggleInactive]}
                 onPress={toggleTheme}
               >
-                <View style={[styles.toggleKnob, isDark && styles.toggleKnobActive]} />
+                <View style={[styles.themeToggleBg, isDark && styles.themeToggleBgActive]}>
+                  <View style={[styles.themeToggleKnob, isDark && styles.themeToggleKnobActive]} />
+                </View>
               </TouchableOpacity>
             </View>
             
-            <ProfileOption
+            <ProfileMenuItem
               icon="information-circle-outline"
               label="About"
               onPress={() => {
@@ -130,15 +98,9 @@ export default function ProfileModal({
               }}
               color={COLORS.dark}
             />
-          </ScrollView>
-          
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.versionText}>OrbiPulse v1.0.0</Text>
-            <Text style={styles.copyrightText}>© 2024 Smart Irrigation</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 }
@@ -146,153 +108,103 @@ export default function ProfileModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'transparent',
   },
-  modalContent: {
+  dropdownContainer: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    width: 240,
     backgroundColor: COLORS.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    maxHeight: '85%',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  userRole: {
-    fontSize: 14,
-    color: COLORS.dark,
-    marginTop: 2,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  userInfoCard: {
+  userInfoSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 24,
-    padding: 16,
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    marginBottom: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     gap: 12,
   },
-  avatarContainer: {
+  avatarWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  userInfo: {
+  userDetails: {
     flex: 1,
+  },
+  userName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 2,
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.dark,
-    marginBottom: 4,
   },
-  accountBadge: {
-    backgroundColor: COLORS.primary + '22',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.secondary,
+    marginHorizontal: 16,
   },
-  accountBadgeText: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: '600',
+  menuOptions: {
+    paddingVertical: 8,
   },
-  optionsContainer: {
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.dark,
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: COLORS.secondary,
-  },
-  optionIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  optionLabel: {
+  menuLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.text,
     fontWeight: '500',
   },
-  themeToggleRow: {
+  themeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: COLORS.accent + '44',
+    paddingVertical: 12,
+    gap: 10,
   },
-  toggleSwitch: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.secondary,
+  themeIconWrapper: {
+    width: 24,
+    alignItems: 'center',
+  },
+  themeToggle: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     padding: 2,
   },
-  toggleSwitchActive: {
+  themeToggleInactive: {
+    backgroundColor: COLORS.secondary,
+  },
+  themeToggleBg: {
+    width: 40,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.secondary,
+    justifyContent: 'center',
+  },
+  themeToggleBgActive: {
     backgroundColor: COLORS.primary,
   },
-  toggleKnob: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  themeToggleKnob: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: COLORS.white,
     alignSelf: 'flex-start',
+    marginLeft: 2,
   },
-  toggleKnobActive: {
+  themeToggleKnobActive: {
     alignSelf: 'flex-end',
-  },
-  footer: {
-    alignItems: 'center',
-    marginTop: 24,
-    gap: 4,
-  },
-  versionText: {
-    fontSize: 12,
-    color: COLORS.dark,
-  },
-  copyrightText: {
-    fontSize: 11,
-    color: COLORS.dark,
-    opacity: 0.7,
   },
 });
