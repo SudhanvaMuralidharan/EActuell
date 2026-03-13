@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "OrbiPulse",
+    "slug": "orbipulse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "orbipulse",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050D1A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.orbipulse.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "OrbiPulse needs location to show valve positions on the map."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#050D1A"
+      },
+      "package": "com.orbipulse.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "OrbiPulse needs location to show valve positions on the map."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
