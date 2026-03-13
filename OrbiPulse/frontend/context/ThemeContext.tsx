@@ -1,21 +1,31 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { COLORS } from '../constants/theme';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-interface ThemeColors {
+export interface ThemeColors {
+  // Core
   background: string;
   card: string;
   text: string;
   border: string;
+  // Extended
+  textSecondary: string;
+  textMuted: string;
+  surface: string;
+  surfaceHigh: string;
 }
 
 const LIGHT_THEME: ThemeColors = {
-  background: COLORS.background,
-  card: COLORS.card,
-  text: COLORS.text,
-  border: COLORS.secondary,
+  background: COLORS.background,      // #F4F6F7
+  card: COLORS.card,                   // #FFFFFF
+  text: COLORS.text,                   // #2F3E46
+  border: COLORS.secondary,           // #3F9EA3
+  textSecondary: COLORS.dark,          // #4F6A7A
+  textMuted: '#6B7A8F',
+  surface: COLORS.card,                // #FFFFFF
+  surfaceHigh: '#F0F2F3',
 };
 
 const DARK_THEME: ThemeColors = {
@@ -23,6 +33,10 @@ const DARK_THEME: ThemeColors = {
   card: '#1E293B',
   text: '#E2E8F0',
   border: '#334155',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  surface: '#1E293B',
+  surfaceHigh: '#283548',
 };
 
 interface ThemeContextType {
@@ -31,6 +45,8 @@ interface ThemeContextType {
   colors: ThemeColors;
   setTheme: (theme: ThemeMode) => void;
   toggleTheme: () => void;
+  showTelemetry: boolean;
+  toggleTelemetry: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -53,6 +69,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
+
+  // Telemetry tab visibility
+  const [showTelemetry, setShowTelemetry] = useState(false);
+  const toggleTelemetry = () => setShowTelemetry(prev => !prev);
   
   const value = {
     theme,
@@ -60,6 +80,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     colors,
     setTheme,
     toggleTheme,
+    showTelemetry,
+    toggleTelemetry,
   };
   
   return (

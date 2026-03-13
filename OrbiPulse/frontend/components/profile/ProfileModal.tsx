@@ -30,7 +30,7 @@ export default function ProfileModal({
   onNavigateSettings,
   onNavigateAbout,
 }: ProfileModalProps) {
-  const { theme, setTheme, toggleTheme, isDark } = useTheme();
+  const { theme, setTheme, toggleTheme, isDark, colors, showTelemetry, toggleTelemetry } = useTheme();
   
   return (
     <Modal
@@ -46,20 +46,20 @@ export default function ProfileModal({
         onPress={onClose}
       >
         {/* Floating dropdown panel */}
-        <View style={styles.dropdownContainer} pointerEvents="box-only">
+        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[styles.dropdownContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {/* User Info Section */}
           <View style={styles.userInfoSection}>
             <View style={styles.avatarWrapper}>
               <Ionicons name="person-circle" size={40} color={COLORS.primary} />
             </View>
             <View style={styles.userDetails}>
-              <Text style={styles.userName}>{USER_DATA.name}</Text>
-              <Text style={styles.userEmail}>{USER_DATA.email}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{USER_DATA.name}</Text>
+              <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{USER_DATA.email}</Text>
             </View>
           </View>
           
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           
           {/* Menu Options */}
           <View style={styles.menuOptions}>
@@ -76,15 +76,31 @@ export default function ProfileModal({
             {/* Theme Toggle Inline */}
             <View style={styles.themeRow}>
               <View style={styles.themeIconWrapper}>
-                <Ionicons name="color-palette-outline" size={20} color={COLORS.secondary} />
+                <Ionicons name={isDark ? "moon-outline" : "sunny-outline"} size={20} color={COLORS.secondary} />
               </View>
-              <Text style={styles.menuLabel}>Theme</Text>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>{isDark ? 'Dark' : 'Light'}</Text>
               <TouchableOpacity
-                style={[styles.themeToggle, !isDark && styles.themeToggleInactive]}
+                style={[styles.themeToggle, isDark ? styles.themeToggleActive : styles.themeToggleInactive]}
                 onPress={toggleTheme}
               >
                 <View style={[styles.themeToggleBg, isDark && styles.themeToggleBgActive]}>
                   <View style={[styles.themeToggleKnob, isDark && styles.themeToggleKnobActive]} />
+                </View>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Telemetry Toggle Inline */}
+            <View style={styles.themeRow}>
+              <View style={styles.themeIconWrapper}>
+                <Ionicons name="pulse-outline" size={20} color={COLORS.secondary} />
+              </View>
+              <Text style={[styles.menuLabel, { color: colors.text }]}>Telemetry</Text>
+              <TouchableOpacity
+                style={[styles.themeToggle, showTelemetry ? styles.themeToggleActive : styles.themeToggleInactive]}
+                onPress={toggleTelemetry}
+              >
+                <View style={[styles.themeToggleBg, showTelemetry && styles.themeToggleBgActive]}>
+                  <View style={[styles.themeToggleKnob, showTelemetry && styles.themeToggleKnobActive]} />
                 </View>
               </TouchableOpacity>
             </View>
@@ -96,10 +112,10 @@ export default function ProfileModal({
                 onClose();
                 onNavigateAbout();
               }}
-              color={COLORS.dark}
+              color={colors.textSecondary}
             />
           </View>
-        </View>
+        </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
   );
@@ -115,7 +131,6 @@ const styles = StyleSheet.create({
     top: 60,
     right: 16,
     width: 240,
-    backgroundColor: COLORS.card,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -123,7 +138,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   userInfoSection: {
     flexDirection: 'row',
@@ -142,16 +156,13 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 13,
-    color: COLORS.dark,
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.secondary,
     marginHorizontal: 16,
   },
   menuOptions: {
@@ -160,7 +171,6 @@ const styles = StyleSheet.create({
   menuLabel: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.text,
     fontWeight: '500',
   },
   themeRow: {
@@ -179,9 +189,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 24,
     borderRadius: 12,
-    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     padding: 2,
+  },
+  themeToggleActive: {
+    backgroundColor: COLORS.primary,
   },
   themeToggleInactive: {
     backgroundColor: COLORS.secondary,

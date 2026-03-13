@@ -22,6 +22,7 @@ import {
   formatLastSeen,
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 import ProfileModal from '../../components/profile/ProfileModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -50,6 +51,7 @@ function getMarkerColor(status: ValveStatus): string {
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
+  const { colors, isDark } = useTheme();
   const [filter, setFilter] = useState<ValveStatus | 'all'>('all');
   const [selectedValve, setSelectedValve] = useState<Valve | null>(null);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -76,12 +78,12 @@ export default function MapScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={[styles.logo, { color: COLORS.primary }]}>OrbiPulse</Text>
-          <Text style={styles.subtitle}>Smart Valve Network</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Smart Valve Network</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity 
@@ -91,12 +93,12 @@ export default function MapScreen() {
             <Ionicons name="person-circle-outline" size={32} color={COLORS.primary} />
           </TouchableOpacity>
           <View style={styles.statsRow}>
-            <View style={styles.statPill}>
+            <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={[styles.dot, { backgroundColor: COLORS.primary }]} />
-              <Text style={styles.statText}>{openCount} Live</Text>
+              <Text style={[styles.statText, { color: colors.text }]}>{openCount} Live</Text>
             </View>
             {faultCount > 0 && (
-              <View style={[styles.statPill, { borderColor: COLORS.danger + '66' }]}>
+              <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: COLORS.danger + '66' }]}>
                 <View style={[styles.dot, { backgroundColor: COLORS.danger }]} />
                 <Text style={[styles.statText, { color: COLORS.danger }]}>{faultCount} Fault</Text>
               </View>
@@ -110,12 +112,12 @@ export default function MapScreen() {
         style={styles.filterBar} contentContainerStyle={styles.filterContent}>
         {STATUS_FILTERS.map((s) => {
           const active = filter === s;
-          const color = s === 'all' ? COLORS.text : getStatusColor(s as ValveStatus);
+          const color = s === 'all' ? colors.text : getStatusColor(s as ValveStatus);
           return (
             <TouchableOpacity key={s}
-              style={[styles.filterChip, active && { backgroundColor: color + '22', borderColor: color }]}
+              style={[styles.filterChip, { backgroundColor: colors.card, borderColor: colors.border }, active && { backgroundColor: color + '22', borderColor: color }]}
               onPress={() => setFilter(s)}>
-              <Text style={[styles.filterText, active && { color }]}>
+              <Text style={[styles.filterText, { color: colors.textSecondary }, active && { color }]}>
                 {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}{' '}
                 <Text style={styles.filterCount}>({statusCounts[s]})</Text>
               </Text>
@@ -208,7 +210,7 @@ export default function MapScreen() {
         </MapView>
 
         {/* Map legend */}
-        <View style={styles.legend}>
+        <View style={[styles.legend, { backgroundColor: colors.card + 'EE', borderColor: colors.border }]}>
           {[
             { label: 'Open', color: COLORS.valveOpen },
             { label: 'Partial', color: COLORS.valvePartial },
@@ -218,7 +220,7 @@ export default function MapScreen() {
           ].map(({ label, color }) => (
             <View key={label} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: color }]} />
-              <Text style={styles.legendText}>{label}</Text>
+              <Text style={[styles.legendText, { color: colors.text }]}>{label}</Text>
             </View>
           ))}
         </View>
@@ -226,15 +228,15 @@ export default function MapScreen() {
 
       {/* Selected Valve Bottom Card */}
       {selectedValve && (
-        <View style={styles.bottomCard}>
+        <View style={[styles.bottomCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.bottomCardHeader}>
             <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedValve.status) }]} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.bottomCardTitle}>{selectedValve.name}</Text>
-              <Text style={styles.bottomCardSubtitle}>{selectedValve.device_id} · {selectedValve.zone}</Text>
+              <Text style={[styles.bottomCardTitle, { color: colors.text }]}>{selectedValve.name}</Text>
+              <Text style={[styles.bottomCardSubtitle, { color: colors.textSecondary }]}>{selectedValve.device_id} · {selectedValve.zone}</Text>
             </View>
             <TouchableOpacity onPress={() => setSelectedValve(null)}>
-              <Ionicons name="close-circle" size={24} color={COLORS.dark} />
+              <Ionicons name="close-circle" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
           <View style={styles.bottomCardMetrics}>
@@ -244,9 +246,9 @@ export default function MapScreen() {
               { label: 'Temp', value: `${selectedValve.internal_temp}°C` },
               { label: 'Signal', value: `${selectedValve.signal_strength}dBm` },
             ].map(({ label, value }) => (
-              <View key={label} style={styles.bottomMetric}>
-                <Text style={styles.bottomMetricLabel}>{label}</Text>
-                <Text style={styles.bottomMetricValue}>{value}</Text>
+              <View key={label} style={[styles.bottomMetric, { backgroundColor: colors.background }]}>
+                <Text style={[styles.bottomMetricLabel, { color: colors.textSecondary }]}>{label}</Text>
+                <Text style={[styles.bottomMetricValue, { color: colors.text }]}>{value}</Text>
               </View>
             ))}
           </View>

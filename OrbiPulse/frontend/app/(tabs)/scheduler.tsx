@@ -20,10 +20,12 @@ import {
   DAYS_OF_WEEK,
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 let nextId = 10;
 
 export default function SchedulerScreen() {
+  const { colors } = useTheme();
   const [schedules, setSchedules] = useState<IrrigationSchedule[]>(INITIAL_SCHEDULES);
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<IrrigationSchedule | null>(null);
@@ -120,13 +122,13 @@ export default function SchedulerScreen() {
   const todaySchedules = schedules.filter((s) => s.enabled && s.days.includes(todayAbbr));
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Irrigation</Text>
-            <Text style={styles.subtitle}>Farmer Scheduler</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Irrigation</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Farmer Scheduler</Text>
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
             <Ionicons name="add" size={20} color={Colors.bg} />
@@ -136,28 +138,28 @@ export default function SchedulerScreen() {
 
         {/* Summary cards */}
         <View style={styles.summaryRow}>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryValue}>{schedules.length}</Text>
-            <Text style={styles.summaryLabel}>Total</Text>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.summaryValue, { color: colors.text }]}>{schedules.length}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{activeSchedules.length}</Text>
-            <Text style={styles.summaryLabel}>Active</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Active</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.secondary }]}>{todaySchedules.length}</Text>
-            <Text style={styles.summaryLabel}>Today</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Today</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.warning }]}>{Math.round(totalMinutesDay)}m</Text>
-            <Text style={styles.summaryLabel}>Avg/Day</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Avg/Day</Text>
           </View>
         </View>
 
         {/* Today's schedule */}
         {todaySchedules.length > 0 && (
           <>
-            <Text style={styles.sectionLabel}>TODAY — {todayAbbr.toUpperCase()}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>TODAY — {todayAbbr.toUpperCase()}</Text>
             {todaySchedules
               .sort((a, b) => a.start_time.localeCompare(b.start_time))
               .map((s) => (
@@ -167,7 +169,7 @@ export default function SchedulerScreen() {
         )}
 
         {/* All schedules */}
-        <Text style={styles.sectionLabel}>ALL SCHEDULES</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ALL SCHEDULES</Text>
         {schedules.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>🌱</Text>

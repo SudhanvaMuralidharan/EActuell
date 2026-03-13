@@ -22,6 +22,7 @@ import {
   TelemetryPoint,
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge from '../../components/StatusBadge';
 import Sparkline from '../../components/Sparkline';
@@ -34,6 +35,7 @@ interface ValveTelemetry {
 }
 
 export default function TelemetryScreen() {
+  const { colors } = useTheme();
   const [selected, setSelected] = useState<string>(VALVES[0].device_id);
   const [telemetryData, setTelemetryData] = useState<Record<string, ValveTelemetry>>({});
   const [tick, setTick] = useState(0);
@@ -99,18 +101,18 @@ export default function TelemetryScreen() {
     v.battery_voltage < 3.3 || v.motor_current > 2.0 || v.internal_temp > 45 || v.status === 'fault';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Telemetry</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Telemetry</Text>
             <View style={styles.liveRow}>
               <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
               <Text style={styles.liveText}>LIVE · updates every 3s</Text>
             </View>
           </View>
-          <Text style={styles.timestamp}>{new Date().toLocaleTimeString()}</Text>
+          <Text style={[styles.timestamp, { color: colors.textMuted }]}>{new Date().toLocaleTimeString()}</Text>
         </View>
 
         {/* Summary metrics */}
@@ -133,7 +135,7 @@ export default function TelemetryScreen() {
         )}
 
         {/* Device selector */}
-        <Text style={styles.sectionTitle}>Device Telemetry</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Device Telemetry</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -149,6 +151,7 @@ export default function TelemetryScreen() {
                 key={v.device_id}
                 style={[
                   styles.deviceChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                   active && { borderColor: color, backgroundColor: color + '18' },
                   abnormal && !active && { borderColor: Colors.red + '66' },
                 ]}
@@ -164,11 +167,11 @@ export default function TelemetryScreen() {
 
         {/* Selected device detail */}
         {activeValve && activeTd && (
-          <View style={styles.detailBlock}>
+          <View style={[styles.detailBlock, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.deviceHeader}>
               <View>
-                <Text style={styles.deviceName}>{activeValve.name}</Text>
-                <Text style={styles.deviceMeta}>{activeValve.device_id} · {activeValve.zone} · GW: {activeValve.gateway_id}</Text>
+                <Text style={[styles.deviceName, { color: colors.text }]}>{activeValve.name}</Text>
+                <Text style={[styles.deviceMeta, { color: colors.textSecondary }]}>{activeValve.device_id} · {activeValve.zone} · GW: {activeValve.gateway_id}</Text>
               </View>
               <StatusBadge status={activeValve.status} />
             </View>
@@ -239,9 +242,9 @@ export default function TelemetryScreen() {
         )}
 
         {/* All devices health summary */}
-        <Text style={styles.sectionTitle}>All Devices — Health Overview</Text>
-        <View style={styles.healthTable}>
-          <View style={styles.tableHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>All Devices — Health Overview</Text>
+        <View style={[styles.healthTable, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.tableHeader, { backgroundColor: colors.surfaceHigh, borderBottomColor: colors.border }]}>
             {['Device', 'Bat', 'Cur', 'Tmp', 'Sig', 'Status'].map((h) => (
               <Text key={h} style={styles.tableHeaderText}>{h}</Text>
             ))}

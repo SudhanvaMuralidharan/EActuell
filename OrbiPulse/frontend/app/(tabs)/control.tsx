@@ -21,6 +21,7 @@ import {
   formatLastSeen,
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 
@@ -33,6 +34,7 @@ interface LocalValveState {
 }
 
 export default function ControlScreen() {
+  const { colors } = useTheme();
   const [states, setStates] = useState<Record<string, LocalValveState>>(() => {
     const init: Record<string, LocalValveState> = {};
     VALVES.forEach((v) => {
@@ -110,16 +112,16 @@ export default function ControlScreen() {
   const isControllable = activeState.status !== 'offline' && activeState.status !== 'fault';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Valve Control</Text>
-          <Text style={styles.subtitle}>Remote valve operation</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Valve Control</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Remote valve operation</Text>
         </View>
 
         {/* Valve picker */}
-        <Text style={styles.sectionLabel}>SELECT VALVE</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SELECT VALVE</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -135,6 +137,7 @@ export default function ControlScreen() {
                 key={v.device_id}
                 style={[
                   styles.valvePickerCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                   active && { borderColor: color, backgroundColor: color + '18' },
                   blocked && styles.valvePickerBlocked,
                 ]}
@@ -149,11 +152,11 @@ export default function ControlScreen() {
         </ScrollView>
 
         {/* Control panel */}
-        <View style={styles.panel}>
+        <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.panelHeader}>
             <View>
-              <Text style={styles.valveName}>{activeValve.name}</Text>
-              <Text style={styles.valveMeta}>{activeValve.zone} · {activeValve.gateway_id}</Text>
+              <Text style={[styles.valveName, { color: colors.text }]}>{activeValve.name}</Text>
+              <Text style={[styles.valveMeta, { color: colors.textSecondary }]}>{activeValve.zone} · {activeValve.gateway_id}</Text>
             </View>
             <StatusBadge status={activeState.status} />
           </View>
@@ -255,7 +258,7 @@ export default function ControlScreen() {
         </View>
 
         {/* Quick status grid */}
-        <Text style={styles.sectionLabel}>ALL VALVES — QUICK STATUS</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ALL VALVES — QUICK STATUS</Text>
         <View style={styles.statusGrid}>
           {VALVES.map((v) => {
             const s = states[v.device_id];
@@ -263,7 +266,7 @@ export default function ControlScreen() {
             return (
               <TouchableOpacity
                 key={v.device_id}
-                style={[styles.statusCard, v.device_id === selectedId && { borderColor: color }]}
+                style={[styles.statusCard, { backgroundColor: colors.surface, borderColor: colors.border }, v.device_id === selectedId && { borderColor: color }]}
                 onPress={() => selectValve(v)}
               >
                 <Text style={styles.statusCardId}>{v.device_id}</Text>
@@ -348,7 +351,6 @@ const styles = StyleSheet.create({
   gaugeLabel: { fontSize: FontSize.xs, color: COLORS.dark },
   gaugeValue: { fontSize: FontSize.xxxl, fontWeight: '900', marginTop: 2 },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.xs },
-  pendingText: { fontSize: FontSize.xs, color: COLORS.primary },
   pendingText: { fontSize: FontSize.xs, color: COLORS.primary },
   lastCmdText: { fontSize: FontSize.xs, color: COLORS.dark, marginTop: Spacing.xs, lineHeight: 16 },
 
