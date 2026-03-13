@@ -1,0 +1,74 @@
+{
+  "schedules": [
+    {
+      "schedule_id": "SCH001",
+      "device_id": "VALVE_005",
+      "start_time": "07:45",
+      "duration_minutes": 60,
+      "status": "inactive"
+    },
+    {
+      "schedule_id": "SCH002",
+      "device_id": "VALVE_001",
+      "start_time": "11:00",
+      "duration_minutes": 15,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH003",
+      "device_id": "VALVE_006",
+      "start_time": "10:00",
+      "duration_minutes": 15,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH004",
+      "device_id": "VALVE_008",
+      "start_time": "19:15",
+      "duration_minutes": 15,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH005",
+      "device_id": "VALVE_002",
+      "start_time": "16:00",
+      "duration_minutes": 60,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH006",
+      "device_id": "VALVE_009",
+      "start_time": "09:00",
+      "duration_minutes": 45,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH007",
+      "device_id": "VALVE_010",
+      "start_time": "14:45",
+      "duration_minutes": 30,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH008",
+      "device_id": "VALVE_005",
+      "start_time": "11:45",
+      "duration_minutes": 30,
+      "status": "active"
+    },
+    {
+      "schedule_id": "SCH009",
+      "device_id": "VALVE_007",
+      "start_time": "08:00",
+      "duration_minutes": 30,
+      "status": "inactive"
+    },
+    {
+      "schedule_id": "SCH010",
+      "device_id": "VALVE_001",
+      "start_time": "12:45",
+      "duration_minutes": 15,
+      "status": "active"
+    }
+  ]
+}
