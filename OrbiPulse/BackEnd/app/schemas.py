@@ -1,6 +1,22 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
+
+# User schemas
+class UserBase(BaseModel):
+    email: EmailStr
+    farmer_name: str
+    phone: Optional[str] = None
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 # Plot schemas
 class PlotBase(BaseModel):
@@ -73,14 +89,42 @@ class Alert(AlertBase):
     class Config:
         from_attributes = True
 
-# Request schemas
+# Schedule schemas
+class ScheduleBase(BaseModel):
+    device_id: str
+    start_time: datetime
+    end_time: datetime
+    duration_minutes: int
+    flow_percentage: float = 100.0
+    enabled: bool = True
+    days_of_week: List[int]
+
+class ScheduleCreate(ScheduleBase):
+    pass
+
+class Schedule(ScheduleBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Request/Response schemas
 class SetFlowRequest(BaseModel):
     flow_percentage: float
 
-# Response schemas
 class MapData(BaseModel):
     device_id: str
     latitude: float
     longitude: float
     status: str
     latest_telemetry: Optional[dict] = None
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: User

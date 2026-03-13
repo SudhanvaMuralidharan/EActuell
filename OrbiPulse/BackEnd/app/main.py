@@ -1,32 +1,33 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from .database import engine, Base
-from .routes import plots, valves, telemetry
+from .routes import auth_routes, plot_routes, valve_routes, telemetry_routes, alert_routes, schedule_routes
+from .config.settings import APP_NAME, APP_VERSION
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Smart Irrigation Monitoring System API",
-    description="Backend API for monitoring irrigation valves",
-    version="1.0.0"
+    title=APP_NAME,
+    description="Backend API for smart irrigation monitoring with AI-powered analytics",
+    version=APP_VERSION
 )
 
 # Include routers
-app.include_router(plots.router)
-app.include_router(valves.router)
-app.include_router(telemetry.router)
-
-# Authentication placeholder endpoints
-@app.post("/auth/login")
-def login():
-    # Placeholder for phone or Google login
-    return {"message": "Authentication placeholder - implement OAuth later"}
-
-@app.post("/auth/register")
-def register():
-    # Placeholder for user registration
-    return {"message": "Registration placeholder - implement user management later"}
+app.include_router(auth_routes.router)
+app.include_router(plot_routes.router)
+app.include_router(valve_routes.router)
+app.include_router(telemetry_routes.router)
+app.include_router(alert_routes.router)
+app.include_router(schedule_routes.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Smart Irrigation Monitoring System API"}
+    return {
+        "message": "Smart Irrigation Monitoring System API",
+        "version": APP_VERSION,
+        "docs": "/docs"
+    }
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

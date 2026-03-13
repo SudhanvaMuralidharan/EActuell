@@ -1,0 +1,28 @@
+{
+  "valves": [
+    {
+      "device_id": "VALVE_001",
+      "model_number": "SMV-2024-A",
+      "location": {
+        "latitude": 14.6745,
+        "longitude": 75.9310
+      },
+      "telemetry": [
+        {
+          "timestamp": "2024-01-15T10:00:00Z",
+          "device_id": "VALVE_001",
+          "valve_position": 45.5,
+          "battery_voltage": 12.4,
+          "motor_current": 1.8,
+          "temperature": 38.2,
+          "signal_strength": -72.5,
+          "status": "normal"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "generated_at": "2024-01-15T10:00:00Z",
+    "description": "Sample telemetry dataset for testing"
+  }
+}
