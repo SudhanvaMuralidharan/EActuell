@@ -168,6 +168,10 @@ export default function MapScreen() {
         onClose={() => setProfileVisible(false)}
         onNavigateSettings={() => router.push('/screens/settings/SettingsScreen' as any)}
         onNavigateAbout={() => router.push('/screens/about/AboutScreen' as any)}
+        onNavigateProfile={() => {
+          setProfileVisible(false);
+          router.push('/(auth)/profile-edit' as any);
+        }}
       />
     </SafeAreaView>
   );

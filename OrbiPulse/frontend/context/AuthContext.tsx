@@ -9,6 +9,7 @@ export interface FarmerProfile {
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isOtpVerified: boolean;
   farmer: FarmerProfile | null;
   phoneNumber: string;
   setPhoneNumber: (phone: string) => void;
@@ -24,22 +25,26 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [farmer, setFarmer] = useState<FarmerProfile | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const login = (farmer: FarmerProfile) => {
     setFarmer(farmer);
     setIsAuthenticated(true);
+    setIsOtpVerified(true);
   };
 
   const logout = () => {
     setFarmer(null);
     setIsAuthenticated(false);
+    setIsOtpVerified(false);
     setPhoneNumber('');
   };
 
   const value = {
     isAuthenticated,
+    isOtpVerified,
     farmer,
     phoneNumber,
     setPhoneNumber,

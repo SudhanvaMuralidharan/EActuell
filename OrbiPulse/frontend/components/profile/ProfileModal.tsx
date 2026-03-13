@@ -5,10 +5,13 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import ProfileMenuItem from './ProfileMenuItem';
 
 export interface ProfileModalProps {
@@ -16,91 +19,120 @@ export interface ProfileModalProps {
   onClose: () => void;
   onNavigateSettings: () => void;
   onNavigateAbout: () => void;
+  onNavigateProfile: () => void;
 }
-
-// Mock user data - replace with actual user data from auth context
-const USER_DATA = {
-  name: 'John Doe',
-  email: 'john.doe@farm.com',
-};
 
 export default function ProfileModal({
   visible,
   onClose,
   onNavigateSettings,
   onNavigateAbout,
+  onNavigateProfile,
 }: ProfileModalProps) {
-  const { theme, setTheme, toggleTheme, isDark } = useTheme();
-  
+  const { toggleTheme, isDark } = useTheme();
+  const { farmer } = useAuth();
+
+  // Get user data from auth context or use defaults
+  const userName = farmer?.name || 'Farmer';
+  const userPhone = farmer?.phone || 'Not set';
+  const userProfileImage = farmer?.profile_image || null;
+
   return (
     <Modal
       visible={visible}
       animationType="fade"
-      transparent={true}
+      transparent
       onRequestClose={onClose}
     >
-      {/* Transparent overlay to detect taps outside */}
-      <TouchableOpacity 
-        style={styles.overlay} 
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        {/* Floating dropdown panel */}
-        <View style={styles.dropdownContainer} pointerEvents="box-only">
-          {/* User Info Section */}
-          <View style={styles.userInfoSection}>
-            <View style={styles.avatarWrapper}>
-              <Ionicons name="person-circle" size={40} color={COLORS.primary} />
-            </View>
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{USER_DATA.name}</Text>
-              <Text style={styles.userEmail}>{USER_DATA.email}</Text>
-            </View>
-          </View>
-          
-          {/* Divider */}
-          <View style={styles.divider} />
-          
-          {/* Menu Options */}
-          <View style={styles.menuOptions}>
-            <ProfileMenuItem
-              icon="settings-outline"
-              label="Settings"
-              onPress={() => {
-                onClose();
-                onNavigateSettings();
-              }}
-              color={COLORS.primary}
-            />
-            
-            {/* Theme Toggle Inline */}
-            <View style={styles.themeRow}>
-              <View style={styles.themeIconWrapper}>
-                <Ionicons name="color-palette-outline" size={20} color={COLORS.secondary} />
-              </View>
-              <Text style={styles.menuLabel}>Theme</Text>
-              <TouchableOpacity
-                style={[styles.themeToggle, !isDark && styles.themeToggleInactive]}
-                onPress={toggleTheme}
-              >
-                <View style={[styles.themeToggleBg, isDark && styles.themeToggleBgActive]}>
-                  <View style={[styles.themeToggleKnob, isDark && styles.themeToggleKnobActive]} />
+      {/* Click outside closes modal */}
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay}>
+          {/* Prevent closing when tapping inside dropdown */}
+          <TouchableWithoutFeedback>
+            <View style={styles.dropdownContainer}>
+              
+              {/* User Info */}
+              <View style={styles.userInfoSection}>
+                {userProfileImage ? (
+                  <Image source={{ uri: userProfileImage }} style={styles.userAvatar} />
+                ) : (
+                  <Ionicons
+                    name="person-circle"
+                    size={42}
+                    color={COLORS.primary}
+                  />
+                )}
+
+                <View style={styles.userDetails}>
+                  <Text style={styles.userName}>{userName}</Text>
+                  <Text style={styles.userPhone}>{userPhone}</Text>
                 </View>
-              </TouchableOpacity>
+
+                <TouchableOpacity onPress={onNavigateProfile} style={styles.editButton}>
+                  <Ionicons name="create-outline" size={20} color={COLORS.secondary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Menu */}
+              <View style={styles.menuOptions}>
+
+                <ProfileMenuItem
+                  icon="settings-outline"
+                  label="Settings"
+                  color={COLORS.primary}
+                  onPress={() => {
+                    onClose();
+                    onNavigateSettings();
+                  }}
+                />
+
+                {/* Theme Toggle */}
+                <View style={styles.themeRow}>
+                  <Ionicons
+                    name="color-palette-outline"
+                    size={20}
+                    color={COLORS.secondary}
+                  />
+
+                  <Text style={styles.menuLabel}>Theme</Text>
+
+                  <TouchableOpacity
+                    style={styles.themeToggle}
+                    onPress={toggleTheme}
+                  >
+                    <View
+                      style={[
+                        styles.toggleBackground,
+                        isDark && styles.toggleBackgroundActive,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.toggleKnob,
+                          isDark && styles.toggleKnobActive,
+                        ]}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <ProfileMenuItem
+                  icon="information-circle-outline"
+                  label="About"
+                  color={COLORS.dark}
+                  onPress={() => {
+                    onClose();
+                    onNavigateAbout();
+                  }}
+                />
+
+              </View>
             </View>
-            
-            <ProfileMenuItem
-              icon="information-circle-outline"
-              label="About"
-              onPress={() => {
-                onClose();
-                onNavigateAbout();
-              }}
-              color={COLORS.dark}
-            />
-          </View>
+          </TouchableWithoutFeedback>
         </View>
-      </TouchableOpacity>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -110,6 +142,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+
   dropdownContainer: {
     position: 'absolute',
     top: 60,
@@ -117,94 +150,103 @@ const styles = StyleSheet.create({
     width: 240,
     backgroundColor: COLORS.card,
     borderRadius: 12,
+
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
+
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+
   userInfoSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    gap: 12,
+    gap: 10,
   },
-  avatarWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  userAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.background,
   },
+
   userDetails: {
     flex: 1,
   },
+
   userName: {
     fontSize: 15,
     fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 2,
   },
-  userEmail: {
+
+  userPhone: {
     fontSize: 13,
     color: COLORS.dark,
+    marginTop: 2,
   },
+
+  editButton: {
+    padding: 4,
+  },
+
   divider: {
     height: 1,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.border,
     marginHorizontal: 16,
   },
+
   menuOptions: {
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
-  menuLabel: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.text,
-    fontWeight: '500',
-  },
+
   themeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 10,
   },
-  themeIconWrapper: {
-    width: 24,
-    alignItems: 'center',
+
+  menuLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text,
   },
+
   themeToggle: {
-    width: 44,
-    height: 24,
+    justifyContent: 'center',
+  },
+
+  toggleBackground: {
+    width: 42,
+    height: 22,
     borderRadius: 12,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.secondary,
     justifyContent: 'center',
     padding: 2,
   },
-  themeToggleInactive: {
-    backgroundColor: COLORS.secondary,
-  },
-  themeToggleBg: {
-    width: 40,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.secondary,
-    justifyContent: 'center',
-  },
-  themeToggleBgActive: {
+
+  toggleBackgroundActive: {
     backgroundColor: COLORS.primary,
   },
-  themeToggleKnob: {
+
+  toggleKnob: {
     width: 16,
     height: 16,
     borderRadius: 8,
     backgroundColor: COLORS.white,
     alignSelf: 'flex-start',
-    marginLeft: 2,
   },
-  themeToggleKnobActive: {
+
+  toggleKnobActive: {
     alignSelf: 'flex-end',
   },
 });
