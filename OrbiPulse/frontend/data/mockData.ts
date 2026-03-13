@@ -1,6 +1,8 @@
 // OrbiPulse Mock Dataset — 20 Valves + 3 Gateways
 // Simulates orbipulse_network_dataset_20v_3gw.json
 
+import { COLORS } from '../constants/colors';
+
 export type ValveStatus = 'open' | 'closed' | 'partial' | 'fault' | 'offline';
 
 export interface Valve {
@@ -134,19 +136,19 @@ export function generateTelemetryHistory(
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 export function getStatusColor(status: ValveStatus): string {
   switch (status) {
-    case 'open':    return '#00E5A0';
-    case 'partial': return '#F5A623';
-    case 'closed':  return '#4A9EFF';
-    case 'fault':   return '#FF4D6D';
-    case 'offline': return '#5C6680';
-    default:        return '#5C6680';
+    case 'open':    return COLORS.valveOpen;
+    case 'partial': return COLORS.valvePartial;
+    case 'closed':  return COLORS.valveClosed;
+    case 'fault':   return COLORS.valveFault;
+    case 'offline': return COLORS.valveOffline;
+    default:        return COLORS.valveOffline;
   }
 }
 
 export function getBatteryColor(voltage: number): string {
-  if (voltage >= 3.7) return '#00E5A0';
-  if (voltage >= 3.4) return '#F5A623';
-  return '#FF4D6D';
+  if (voltage >= 3.7) return COLORS.success;
+  if (voltage >= 3.4) return COLORS.warning;
+  return COLORS.danger;
 }
 
 export function getSignalIcon(dbm: number): string {

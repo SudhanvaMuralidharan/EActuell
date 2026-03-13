@@ -1,32 +1,107 @@
 from fastapi import FastAPI
-from .database import engine, Base
-from .routes import plots, valves, telemetry
+from fastapi.middleware.cors import CORSMiddleware
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from config.settings import get_settings
+from routes import (
+    auth_routes,
+    plot_routes,
+    valve_routes,
+    telemetry_routes,
+    alert_routes,
+    schedule_routes,
+    ai_routes,
+)
+from services.alert_service import run_full_evaluation
+
+settings = get_settings()
+
+# ---------------------------------------------------------------------------
+# Application factory
+# ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="Smart Irrigation Monitoring System API",
-    description="Backend API for monitoring irrigation valves",
-    version="1.0.0"
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="""
+## 🌱 OrbiPulse – Smart Irrigation Monitoring API
+
+A backend API for monitoring and controlling smart irrigation valves
+installed across agricultural plots.
+
+### Features
+- **JWT Authentication** — secure token-based access
+- **Plot Management** — create and manage geo-referenced agricultural plots
+- **Valve Management** — register, control (open/close), and monitor valves
+- **Telemetry Monitoring** — stream and query sensor readings
+- **Alert System** — threshold-based alerts with acknowledgement
+- **Irrigation Scheduling** — recurring schedules per valve
+- **AI Insights** — 4-stage pipeline: analyze → detect anomalies → decide → recommend
+
+### Demo Credentials
+| Username | Password |
+|----------|----------|
+| farmer1  | pass123  |
+| farmer2  | pass123  |
+
+Use the **Authorize** button (🔒) above with:
+`username: farmer1`, `password: pass123`
+""",
+    contact={"name": "OrbiPulse Team", "email": "dev@orbipulse.io"},
+    license_info={"name": "MIT"},
 )
 
-# Include routers
-app.include_router(plots.router)
-app.include_router(valves.router)
-app.include_router(telemetry.router)
+# ---------------------------------------------------------------------------
+# CORS — allow all origins for development (tighten in production)
+# ---------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Authentication placeholder endpoints
-@app.post("/auth/login")
-def login():
-    # Placeholder for phone or Google login
-    return {"message": "Authentication placeholder - implement OAuth later"}
+# ---------------------------------------------------------------------------
+# Routers (with /api prefix to match frontend config)
+# ---------------------------------------------------------------------------
+from fastapi import APIRouter
 
-@app.post("/auth/register")
-def register():
-    # Placeholder for user registration
-    return {"message": "Registration placeholder - implement user management later"}
+api_router = APIRouter(prefix="/api")
+api_router.include_router(auth_routes.router)
+api_router.include_router(plot_routes.router)
+api_router.include_router(valve_routes.router)
+api_router.include_router(telemetry_routes.router)
+api_router.include_router(alert_routes.router)
+api_router.include_router(schedule_routes.router)
+api_router.include_router(ai_routes.router)
 
-@app.get("/")
-def read_root():
-    return {"message": "Smart Irrigation Monitoring System API"}
+app.include_router(api_router)
+
+
+# ---------------------------------------------------------------------------
+# Startup
+# ---------------------------------------------------------------------------
+@app.on_event("startup")
+def on_startup():
+    """Pre-populate alerts from dataset on startup."""
+    run_full_evaluation()
+    print(f"✅ {settings.APP_NAME} v{settings.APP_VERSION} started")
+    print("📖 Swagger docs → http://localhost:8000/docs")
+
+
+# ---------------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------------
+@app.get("/", tags=["Health"], summary="API health check")
+def root():
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health", tags=["Health"], summary="Liveness probe")
+def health():
+    return {"status": "ok"}

@@ -1,12 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
@@ -20,7 +18,9 @@ import {
   getStatusColor,
   formatLastSeen,
 } from '../../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
+import { useValves } from '../../context/ValveContext';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 
@@ -33,21 +33,11 @@ interface LocalValveState {
 }
 
 export default function ControlScreen() {
-  const [states, setStates] = useState<Record<string, LocalValveState>>(() => {
-    const init: Record<string, LocalValveState> = {};
-    VALVES.forEach((v) => {
-      init[v.device_id] = {
-        position: v.valve_position,
-        status: v.status,
-        pending: false,
-      };
-    });
-    return init;
-  });
+  const { colors } = useTheme();
+  const { states, cmdLog, openValve, closeValve, setValvePosition } = useValves();
 
   const [selectedId, setSelectedId] = useState<string>(VALVES[0].device_id);
   const [sliderVal, setSliderVal] = useState<number>(VALVES[0].valve_position);
-  const [cmdLog, setCmdLog] = useState<string[]>([]);
 
   const activeValve = VALVES.find((v) => v.device_id === selectedId)!;
   const activeState = states[selectedId]!;
@@ -57,69 +47,17 @@ export default function ControlScreen() {
     setSliderVal(states[valve.device_id]?.position ?? valve.valve_position);
   };
 
-  const simulateCommand = (
-    valveId: string,
-    command: string,
-    newPosition: number,
-    newStatus: ValveStatus,
-  ) => {
-    const valve = VALVES.find((v) => v.device_id === valveId)!;
-    if (valve.status === 'offline' || valve.status === 'fault') {
-      Alert.alert(
-        'Command Blocked',
-        `${valve.name} is ${valve.status}. Cannot send command.`,
-        [{ text: 'OK' }],
-      );
-      return;
-    }
-
-    // Set pending
-    setStates((prev) => ({
-      ...prev,
-      [valveId]: { ...prev[valveId], pending: true },
-    }));
-
-    const logEntry = `[${new Date().toLocaleTimeString()}] ${valveId} → ${command}`;
-    setCmdLog((prev) => [logEntry, ...prev.slice(0, 19)]);
-
-    // Simulate network round-trip (800–1500ms)
-    const delay = 800 + Math.random() * 700;
-    setTimeout(() => {
-      const success = Math.random() > 0.08; // 92% success rate
-      setStates((prev) => ({
-        ...prev,
-        [valveId]: {
-          position: success ? newPosition : prev[valveId].position,
-          status: success ? newStatus : prev[valveId].status,
-          pending: false,
-          lastCmd: command,
-          lastCmdTime: new Date().toLocaleTimeString(),
-        },
-      }));
-      const ackEntry = success
-        ? `[${new Date().toLocaleTimeString()}] ✓ ACK: ${valveId} ${command}`
-        : `[${new Date().toLocaleTimeString()}] ✗ NACK: ${valveId} ${command} — retry?`;
-      setCmdLog((prev) => [ackEntry, ...prev.slice(0, 19)]);
-    }, delay);
-  };
-
-  const handleOpen  = () => simulateCommand(selectedId, 'OPEN  100%', 100, 'open');
-  const handleClose = () => simulateCommand(selectedId, 'CLOSE 0%',  0,   'closed');
-  const handleSet   = () => simulateCommand(selectedId, `SET   ${Math.round(sliderVal)}%`, Math.round(sliderVal), sliderVal > 0 && sliderVal < 100 ? 'partial' : sliderVal === 100 ? 'open' : 'closed');
+  const handleOpen  = () => { openValve(selectedId); setSliderVal(100); };
+  const handleClose = () => { closeValve(selectedId); setSliderVal(0); };
+  const handleSet   = () => setValvePosition(selectedId, sliderVal);
 
   const isControllable = activeState.status !== 'offline' && activeState.status !== 'fault';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Valve Control</Text>
-          <Text style={styles.subtitle}>Remote valve operation</Text>
-        </View>
-
-        {/* Valve picker */}
-        <Text style={styles.sectionLabel}>SELECT VALVE</Text>
+        {/* Device select */}
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SELECT VALVE</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -135,6 +73,7 @@ export default function ControlScreen() {
                 key={v.device_id}
                 style={[
                   styles.valvePickerCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
                   active && { borderColor: color, backgroundColor: color + '18' },
                   blocked && styles.valvePickerBlocked,
                 ]}
@@ -142,18 +81,18 @@ export default function ControlScreen() {
               >
                 <View style={[styles.pickerDot, { backgroundColor: color }]} />
                 <Text style={[styles.pickerId, active && { color }]}>{v.device_id}</Text>
-                {s.pending && <ActivityIndicator size={8} color={Colors.accent} style={{ marginTop: 2 }} />}
+                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={{ marginTop: 2 }} />}
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
         {/* Control panel */}
-        <View style={styles.panel}>
+        <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.panelHeader}>
             <View>
-              <Text style={styles.valveName}>{activeValve.name}</Text>
-              <Text style={styles.valveMeta}>{activeValve.zone} · {activeValve.gateway_id}</Text>
+              <Text style={[styles.valveName, { color: colors.text }]}>{activeValve.name}</Text>
+              <Text style={[styles.valveMeta, { color: colors.textSecondary }]}>{activeValve.zone} · {activeValve.gateway_id}</Text>
             </View>
             <StatusBadge status={activeState.status} />
           </View>
@@ -168,7 +107,7 @@ export default function ControlScreen() {
               </Text>
               {activeState.pending && (
                 <View style={styles.pendingRow}>
-                  <ActivityIndicator size="small" color={Colors.accent} />
+                  <ActivityIndicator size="small" color={COLORS.primary} />
                   <Text style={styles.pendingText}>Sending command…</Text>
                 </View>
               )}
@@ -183,7 +122,7 @@ export default function ControlScreen() {
           {/* Blocked notice */}
           {!isControllable && (
             <View style={styles.blockedBanner}>
-              <Ionicons name="ban" size={16} color={Colors.red} />
+              <Ionicons name="ban" size={16} color={COLORS.danger} />
               <Text style={styles.blockedText}>
                 Control disabled — valve is {activeState.status}
               </Text>
@@ -231,9 +170,9 @@ export default function ControlScreen() {
               step={5}
               value={sliderVal}
               onValueChange={setSliderVal}
-              minimumTrackTintColor={Colors.accent}
+              minimumTrackTintColor={COLORS.primary}
               maximumTrackTintColor={Colors.border}
-              thumbTintColor={Colors.accent}
+              thumbTintColor={COLORS.primary}
               disabled={!isControllable || activeState.pending}
             />
             <View style={styles.sliderTicks}>
@@ -255,7 +194,7 @@ export default function ControlScreen() {
         </View>
 
         {/* Quick status grid */}
-        <Text style={styles.sectionLabel}>ALL VALVES — QUICK STATUS</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ALL VALVES — QUICK STATUS</Text>
         <View style={styles.statusGrid}>
           {VALVES.map((v) => {
             const s = states[v.device_id];
@@ -263,13 +202,13 @@ export default function ControlScreen() {
             return (
               <TouchableOpacity
                 key={v.device_id}
-                style={[styles.statusCard, v.device_id === selectedId && { borderColor: color }]}
+                style={[styles.statusCard, { backgroundColor: colors.surface, borderColor: colors.border }, v.device_id === selectedId && { borderColor: color }]}
                 onPress={() => selectValve(v)}
               >
                 <Text style={styles.statusCardId}>{v.device_id}</Text>
                 <Text style={[styles.statusCardPos, { color }]}>{s.position}%</Text>
                 <View style={[styles.statusCardDot, { backgroundColor: color }]} />
-                {s.pending && <ActivityIndicator size={8} color={Colors.accent} style={styles.statusPending} />}
+                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={styles.statusPending} />}
               </TouchableOpacity>
             );
           })}
@@ -299,13 +238,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
   header: { padding: Spacing.md, paddingBottom: Spacing.sm },
-  title: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.textPrimary },
-  subtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
+  title: { fontSize: FontSize.xxl, fontWeight: '800', color: COLORS.text },
+  subtitle: { fontSize: FontSize.sm, color: COLORS.dark, marginTop: 2 },
 
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textMuted,
+    color: COLORS.dark,
     letterSpacing: 1,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
@@ -324,7 +263,7 @@ const styles = StyleSheet.create({
   },
   valvePickerBlocked: { opacity: 0.5 },
   pickerDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 4 },
-  pickerId: { fontSize: FontSize.xs, color: Colors.textSecondary, fontWeight: '700' },
+  pickerId: { fontSize: FontSize.xs, color: COLORS.dark, fontWeight: '700' },
 
   panel: {
     marginHorizontal: Spacing.md,
@@ -340,16 +279,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: Spacing.md,
   },
-  valveName: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary },
-  valveMeta: { fontSize: FontSize.xs, color: Colors.textSecondary, marginTop: 2 },
+  valveName: { fontSize: FontSize.lg, fontWeight: '700', color: COLORS.text },
+  valveMeta: { fontSize: FontSize.xs, color: COLORS.dark, marginTop: 2 },
 
   gaugeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, marginBottom: Spacing.md },
   gaugeInfo: { flex: 1 },
-  gaugeLabel: { fontSize: FontSize.xs, color: Colors.textSecondary },
+  gaugeLabel: { fontSize: FontSize.xs, color: COLORS.dark },
   gaugeValue: { fontSize: FontSize.xxxl, fontWeight: '900', marginTop: 2 },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.xs },
-  pendingText: { fontSize: FontSize.xs, color: Colors.accent },
-  lastCmdText: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.xs, lineHeight: 16 },
+  pendingText: { fontSize: FontSize.xs, color: COLORS.primary },
+  lastCmdText: { fontSize: FontSize.xs, color: COLORS.dark, marginTop: Spacing.xs, lineHeight: 16 },
 
   blockedBanner: {
     flexDirection: 'row',
@@ -385,7 +324,7 @@ const styles = StyleSheet.create({
   sliderValue: { fontSize: FontSize.sm, fontWeight: '800', color: Colors.accent },
   slider: { width: '100%', height: 40 },
   sliderTicks: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -8 },
-  sliderTick: { fontSize: 10, color: Colors.textMuted },
+  sliderTick: { fontSize: 10, color: COLORS.dark },
   setBtn: {
     backgroundColor: Colors.surfaceHigh,
     borderRadius: Radius.md,
@@ -422,7 +361,7 @@ const styles = StyleSheet.create({
 
   logBox: {
     marginHorizontal: Spacing.md,
-    backgroundColor: '#020810',
+    backgroundColor: COLORS.card,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     borderWidth: 1,
@@ -430,7 +369,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     marginBottom: Spacing.md,
   },
-  logEntry: { fontSize: 11, color: Colors.textMuted, fontFamily: 'monospace', marginBottom: 2 },
-  logAck: { color: Colors.accent },
-  logNack: { color: Colors.red },
+  logEntry: { fontSize: 11, color: COLORS.dark, fontFamily: 'monospace', marginBottom: 2 },
+  logAck: { color: COLORS.primary },
+  logNack: { color: COLORS.danger },
 });

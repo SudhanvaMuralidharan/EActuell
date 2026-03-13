@@ -1,25 +1,43 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
+import { COLORS } from '../constants/theme';
+import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { AuthProvider } from '../context/AuthContext';
+import { ValveProvider } from '../context/ValveContext';
 
-export default function RootLayout() {
+function RootContent() {
+  const { colors, isDark } = useTheme();
+  
   return (
-    <View style={styles.root}>
-      <StatusBar style="light" backgroundColor="#050D1A" />
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="valve/[id]"
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: '#0B1829' },
-            headerTintColor: '#E8F0FE',
+            headerStyle: { backgroundColor: colors.card },
+            headerTintColor: colors.text,
             headerTitleStyle: { fontWeight: '700' },
             headerBackTitle: 'Back',
           }}
         />
       </Stack>
     </View>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <ValveProvider>
+          <RootContent />
+        </ValveProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

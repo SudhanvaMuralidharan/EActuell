@@ -1,22 +1,26 @@
+import { COLORS } from './colors';
+
+export { COLORS };
+
 export const Colors = {
-  bg:          '#050D1A',
-  surface:     '#0B1829',
-  surfaceHigh: '#112138',
-  border:      '#1A2F4A',
-  borderHigh:  '#254260',
+  bg:          COLORS.background,
+  surface:     COLORS.card,
+  surfaceHigh: '#F0F2F3',
+  border:      '#E0E5E8',
+  borderHigh:  '#D0D5D8',
 
-  accent:      '#00E5A0',   // teal-green  — primary action
-  accentDim:   '#00805A',
-  blue:        '#4A9EFF',   // info / closed valve
-  orange:      '#F5A623',   // partial / warning
-  red:         '#FF4D6D',   // fault / danger
-  offlineGray: '#5C6680',
+  accent:      COLORS.primary,
+  accentDim:   COLORS.secondary,
+  blue:        COLORS.secondary,
+  orange:      COLORS.warning,
+  red:         COLORS.danger,
+  offlineGray: COLORS.valveOffline,
 
-  textPrimary:   '#E8F0FE',
-  textSecondary: '#7B8EAB',
-  textMuted:     '#3D5068',
+  textPrimary:   COLORS.text,
+  textSecondary: COLORS.dark,
+  textMuted:     '#6B7A8F',
 
-  white: '#FFFFFF',
+  white: COLORS.white,
 };
 
 export const Spacing = {

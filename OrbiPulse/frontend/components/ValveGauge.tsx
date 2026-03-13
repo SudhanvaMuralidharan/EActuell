@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { Colors, FontSize } from '../constants/theme';
+import { Colors, FontSize, COLORS } from '../constants/theme';
 import { getStatusColor, ValveStatus } from '../data/mockData';
 
 interface ValveGaugeProps {
@@ -31,7 +31,7 @@ export default function ValveGauge({ position, status, size = 80 }: ValveGaugePr
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={Colors.border}
+          stroke={COLORS.background}
           strokeWidth={6}
         />
         {/* Progress */}
