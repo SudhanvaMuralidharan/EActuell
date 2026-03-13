@@ -58,6 +58,11 @@ export default function SettingsScreen() {
         <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>ACCOUNT</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
+            icon="plus-circle-outline"
+            label="Add New Valve"
+            onPress={() => router.push('/settings/add-valve')}
+          />
+          <SettingItem
             icon="person-outline"
             label="Profile Information"
             value={user?.name || 'Set Name'}

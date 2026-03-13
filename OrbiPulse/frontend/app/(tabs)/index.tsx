@@ -64,18 +64,17 @@ function getStatusIcon(status: string) {
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
-  const { colors, isDark } = useTheme();
-  const { states, openValve, closeValve, setValvePosition } = useValves();
+  const { colors } = useTheme();
+  const { valves, states, openValve, closeValve, setValvePosition } = useValves();
   const [filter, setFilter] = useState<ValveStatus | 'all'>('all');
   const [selectedValve, setSelectedValve] = useState<Valve | null>(null);
   const [sliderVal, setSliderVal] = useState<number>(0);
 
-  const filteredValves = filter === 'all'
-    ? VALVES
-    : VALVES.filter((v) => v.status === filter);
+  const filteredValves = filter === 'all' ? valves : valves.filter(v => v.status === filter);
 
-  const statusCounts = STATUS_FILTERS.reduce((acc, s) => {
-    acc[s] = s === 'all' ? VALVES.length : VALVES.filter((v) => v.status === s).length;
+  const statusCounts = valves.reduce((acc: any, v) => {
+    acc[v.status] = (acc[v.status] || 0) + 1;
+    acc['all'] = (acc['all'] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 

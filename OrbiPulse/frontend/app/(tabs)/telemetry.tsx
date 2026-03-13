@@ -6,12 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import {
-  VALVES,
   GATEWAYS,
   Valve,
   generateTelemetryHistory,
@@ -37,8 +37,8 @@ interface ValveTelemetry {
 
 export default function TelemetryScreen() {
   const { colors } = useTheme();
-  const { openCount, faultCount, offlineCount } = useValves();
-  const [selected, setSelected] = useState<string>(VALVES[0].device_id);
+  const { valves, openCount, faultCount, offlineCount } = useValves();
+  const [selected, setSelected] = useState<string>(valves[0]?.device_id || '');
   const [telemetryData, setTelemetryData] = useState<Record<string, ValveTelemetry>>({});
   const [tick, setTick] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -46,7 +46,7 @@ export default function TelemetryScreen() {
   // Initialise telemetry history for all valves
   useEffect(() => {
     const initial: Record<string, ValveTelemetry> = {};
-    VALVES.forEach((v) => {
+    valves.forEach((v) => {
       initial[v.device_id] = {
         valve: v,
         currentHistory: generateTelemetryHistory(v.motor_current, 0.3),
@@ -60,7 +60,7 @@ export default function TelemetryScreen() {
       setTick((t) => t + 1);
       setTelemetryData((prev) => {
         const next = { ...prev };
-        VALVES.forEach((v) => {
+        valves.forEach((v) => {
           if (!prev[v.device_id]) return;
           const td = prev[v.device_id];
           const addPoint = (hist: TelemetryPoint[], base: number, variance: number) => {
@@ -89,13 +89,13 @@ export default function TelemetryScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeValve = VALVES.find((v) => v.device_id === selected)!;
+  const activeValve = valves.find((v) => v.device_id === selected);
   const activeTd   = telemetryData[selected];
 
   const isAbnormal = (v: Valve) =>
     v.battery_voltage < 3.3 || v.motor_current > 2.0 || v.internal_temp > 45 || v.status === 'fault';
 
-  const onlineCount = VALVES.length - offlineCount;
+  const onlineCount = valves.length - offlineCount;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
@@ -103,7 +103,7 @@ export default function TelemetryScreen() {
         {/* Summary metrics */}
         <View style={styles.section}>
           <View style={styles.metricsRow}>
-            <MetricCard label="Online" value={onlineCount} unit={`/ ${VALVES.length}`} color={Colors.accent} icon="🟢" />
+            <MetricCard label="Online" value={onlineCount} unit={`/ ${valves.length}`} color={Colors.accent} icon="🟢" />
             <MetricCard label="Faults"  value={faultCount}   color={faultCount > 0 ? Colors.red : Colors.textPrimary} icon="⚠️" warning={faultCount > 0} />
             <MetricCard label="Offline" value={offlineCount} color={offlineCount > 0 ? Colors.offlineGray : Colors.textPrimary} icon="📡" />
           </View>
@@ -127,7 +127,7 @@ export default function TelemetryScreen() {
           contentContainerStyle={styles.deviceList}
           style={styles.deviceListWrap}
         >
-          {VALVES.map((v) => {
+          {valves.map((v) => {
             const active = v.device_id === selected;
             const color  = getStatusColor(v.status);
             const abnormal = isAbnormal(v);
@@ -151,7 +151,7 @@ export default function TelemetryScreen() {
         </ScrollView>
 
         {/* Selected device detail */}
-        {activeValve && activeTd && (
+        {activeValve && activeTd ? (
           <View style={[styles.detailBlock, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.deviceHeader}>
               <View>
@@ -224,6 +224,11 @@ export default function TelemetryScreen() {
               <Text style={styles.moveTime}>Move time: {activeValve.movement_duration}ms</Text>
             </View>
           </View>
+        ) : (
+          <View style={[styles.detailBlock, { alignItems: 'center', paddingVertical: 40 }]}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading telemetry detail...</Text>
+          </View>
         )}
 
         {/* All devices health summary */}
@@ -234,7 +239,7 @@ export default function TelemetryScreen() {
               <Text key={h} style={styles.tableHeaderText}>{h}</Text>
             ))}
           </View>
-          {VALVES.map((v) => {
+          {valves.map((v) => {
             const abnormal = isAbnormal(v);
             return (
               <TouchableOpacity

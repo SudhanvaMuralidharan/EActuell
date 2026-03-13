@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import {
-  VALVES,
   Valve,
   ValveStatus,
   getStatusColor,
@@ -34,13 +33,13 @@ interface LocalValveState {
 
 export default function ControlScreen() {
   const { colors } = useTheme();
-  const { states, cmdLog, openValve, closeValve, setValvePosition } = useValves();
+  const { valves, states, cmdLog, openValve, closeValve, setValvePosition } = useValves();
 
-  const [selectedId, setSelectedId] = useState<string>(VALVES[0].device_id);
-  const [sliderVal, setSliderVal] = useState<number>(VALVES[0].valve_position);
+  const [selectedId, setSelectedId] = useState<string>(valves[0]?.device_id || '');
+  const [sliderVal, setSliderVal] = useState<number>(valves[0]?.valve_position || 0);
 
-  const activeValve = VALVES.find((v) => v.device_id === selectedId)!;
-  const activeState = states[selectedId]!;
+  const activeValve = valves.find((v) => v.device_id === selectedId);
+  const activeState = states[selectedId];
 
   const selectValve = (valve: Valve) => {
     setSelectedId(valve.device_id);
@@ -63,7 +62,7 @@ export default function ControlScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.valvePicker}
         >
-          {VALVES.map((v) => {
+          {valves.map((v) => {
             const s = states[v.device_id];
             const active = v.device_id === selectedId;
             const color = getStatusColor(s.status);
@@ -88,115 +87,122 @@ export default function ControlScreen() {
         </ScrollView>
 
         {/* Control panel */}
-        <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.panelHeader}>
-            <View>
-              <Text style={[styles.valveName, { color: colors.text }]}>{activeValve.name}</Text>
-              <Text style={[styles.valveMeta, { color: colors.textSecondary }]}>{activeValve.zone} · {activeValve.gateway_id}</Text>
+        {activeValve && activeState ? (
+          <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.panelHeader}>
+              <View>
+                <Text style={[styles.valveName, { color: colors.text }]}>{activeValve.name}</Text>
+                <Text style={[styles.valveMeta, { color: colors.textSecondary }]}>{activeValve.zone} · {activeValve.gateway_id}</Text>
+              </View>
+              <StatusBadge status={activeState.status} />
             </View>
-            <StatusBadge status={activeState.status} />
-          </View>
 
-          {/* Gauge */}
-          <View style={styles.gaugeRow}>
-            <ValveGauge position={activeState.position} status={activeState.status} size={110} />
-            <View style={styles.gaugeInfo}>
-              <Text style={styles.gaugeLabel}>Current Position</Text>
-              <Text style={[styles.gaugeValue, { color: getStatusColor(activeState.status) }]}>
-                {activeState.position}%
-              </Text>
-              {activeState.pending && (
-                <View style={styles.pendingRow}>
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                  <Text style={styles.pendingText}>Sending command…</Text>
-                </View>
-              )}
-              {activeState.lastCmd && !activeState.pending && (
-                <Text style={styles.lastCmdText}>
-                  Last: {activeState.lastCmd}{'\n'}at {activeState.lastCmdTime}
+            {/* Gauge */}
+            <View style={styles.gaugeRow}>
+              <ValveGauge position={activeState.position} status={activeState.status} size={110} />
+              <View style={styles.gaugeInfo}>
+                <Text style={styles.gaugeLabel}>Current Position</Text>
+                <Text style={[styles.gaugeValue, { color: getStatusColor(activeState.status) }]}>
+                  {activeState.position}%
                 </Text>
-              )}
+                {activeState.pending && (
+                  <View style={styles.pendingRow}>
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                    <Text style={styles.pendingText}>Sending command…</Text>
+                  </View>
+                )}
+                {activeState.lastCmd && !activeState.pending && (
+                  <Text style={styles.lastCmdText}>
+                    Last: {activeState.lastCmd}{'\n'}at {activeState.lastCmdTime}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            {/* Blocked notice */}
+            {!isControllable && (
+              <View style={styles.blockedBanner}>
+                <Ionicons name="ban" size={16} color={COLORS.danger} />
+                <Text style={styles.blockedText}>
+                  Control disabled — valve is {activeState.status}
+                </Text>
+              </View>
+            )}
+
+            {/* Open / Close buttons */}
+            <View style={styles.ctrlRow}>
+              <TouchableOpacity
+                style={[
+                  styles.ctrlBtn,
+                  styles.openBtn,
+                  (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
+                ]}
+                onPress={handleOpen}
+                disabled={!isControllable || activeState.pending}
+              >
+                <Ionicons name="water" size={20} color={Colors.bg} />
+                <Text style={styles.ctrlBtnText}>OPEN</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.ctrlBtn,
+                  styles.closeBtn,
+                  (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
+                ]}
+                onPress={handleClose}
+                disabled={!isControllable || activeState.pending}
+              >
+                <Ionicons name="close-circle" size={20} color={Colors.bg} />
+                <Text style={styles.ctrlBtnText}>CLOSE</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Position slider */}
+            <View style={styles.sliderSection}>
+              <View style={styles.sliderLabelRow}>
+                <Text style={styles.sliderLabel}>Set Position</Text>
+                <Text style={styles.sliderValue}>{Math.round(sliderVal)}%</Text>
+              </View>
+              <Slider
+                style={styles.slider}
+                minimumValue={0}
+                maximumValue={100}
+                step={5}
+                value={sliderVal}
+                onValueChange={setSliderVal}
+                minimumTrackTintColor={COLORS.primary}
+                maximumTrackTintColor={Colors.border}
+                thumbTintColor={COLORS.primary}
+                disabled={!isControllable || activeState.pending}
+              />
+              <View style={styles.sliderTicks}>
+                {[0, 25, 50, 75, 100].map((t) => (
+                  <Text key={t} style={styles.sliderTick}>{t}%</Text>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.setBtn,
+                  (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
+                ]}
+                onPress={handleSet}
+                disabled={!isControllable || activeState.pending}
+              >
+                <Text style={styles.setBtnText}>Apply Position — {Math.round(sliderVal)}%</Text>
+              </TouchableOpacity>
             </View>
           </View>
-
-          {/* Blocked notice */}
-          {!isControllable && (
-            <View style={styles.blockedBanner}>
-              <Ionicons name="ban" size={16} color={COLORS.danger} />
-              <Text style={styles.blockedText}>
-                Control disabled — valve is {activeState.status}
-              </Text>
-            </View>
-          )}
-
-          {/* Open / Close buttons */}
-          <View style={styles.ctrlRow}>
-            <TouchableOpacity
-              style={[
-                styles.ctrlBtn,
-                styles.openBtn,
-                (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
-              ]}
-              onPress={handleOpen}
-              disabled={!isControllable || activeState.pending}
-            >
-              <Ionicons name="water" size={20} color={Colors.bg} />
-              <Text style={styles.ctrlBtnText}>OPEN</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.ctrlBtn,
-                styles.closeBtn,
-                (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
-              ]}
-              onPress={handleClose}
-              disabled={!isControllable || activeState.pending}
-            >
-              <Ionicons name="close-circle" size={20} color={Colors.bg} />
-              <Text style={styles.ctrlBtnText}>CLOSE</Text>
-            </TouchableOpacity>
+        ) : (
+          <View style={[styles.panel, { alignItems: 'center', paddingVertical: 40 }]}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading valve control...</Text>
           </View>
-
-          {/* Position slider */}
-          <View style={styles.sliderSection}>
-            <View style={styles.sliderLabelRow}>
-              <Text style={styles.sliderLabel}>Set Position</Text>
-              <Text style={styles.sliderValue}>{Math.round(sliderVal)}%</Text>
-            </View>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={100}
-              step={5}
-              value={sliderVal}
-              onValueChange={setSliderVal}
-              minimumTrackTintColor={COLORS.primary}
-              maximumTrackTintColor={Colors.border}
-              thumbTintColor={COLORS.primary}
-              disabled={!isControllable || activeState.pending}
-            />
-            <View style={styles.sliderTicks}>
-              {[0, 25, 50, 75, 100].map((t) => (
-                <Text key={t} style={styles.sliderTick}>{t}%</Text>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.setBtn,
-                (!isControllable || activeState.pending) && styles.ctrlBtnDisabled,
-              ]}
-              onPress={handleSet}
-              disabled={!isControllable || activeState.pending}
-            >
-              <Text style={styles.setBtnText}>Apply Position — {Math.round(sliderVal)}%</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
 
         {/* Quick status grid */}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ALL VALVES — QUICK STATUS</Text>
         <View style={styles.statusGrid}>
-          {VALVES.map((v) => {
+          {valves.map((v) => {
             const s = states[v.device_id];
             const color = getStatusColor(s.status);
             return (
