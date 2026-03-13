@@ -51,6 +51,17 @@ function getMarkerColor(status: ValveStatus): string {
   }
 }
 
+function getStatusIcon(status: string) {
+  switch (status) {
+    case 'open': return 'water';
+    case 'partial': return 'water-outline';
+    case 'closed': return 'close-circle';
+    case 'fault': return 'alert-circle';
+    case 'offline': return 'cloud-offline';
+    default: return 'apps-outline';
+  }
+}
+
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
@@ -86,10 +97,12 @@ export default function MapScreen() {
         {STATUS_FILTERS.map((s) => {
           const active = filter === s;
           const color = s === 'all' ? colors.text : getStatusColor(s as ValveStatus);
+          const icon = getStatusIcon(s);
           return (
             <TouchableOpacity key={s}
               style={[styles.filterChip, { backgroundColor: colors.card, borderColor: colors.border }, active && { backgroundColor: color + '22', borderColor: color }]}
               onPress={() => setFilter(s)}>
+              <Ionicons name={icon as any} size={14} color={active ? color : colors.textMuted} style={{ marginRight: 6 }} />
               <Text style={[styles.filterText, { color: colors.textSecondary }, active && { color }]}>
                 {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}{' '}
                 <Text style={styles.filterCount}>({statusCounts[s]})</Text>
@@ -206,14 +219,14 @@ export default function MapScreen() {
         {/* Map legend */}
         <View style={[styles.legend, { backgroundColor: colors.card + 'EE', borderColor: colors.border }]}>
           {[
-            { label: 'Open', color: COLORS.valveOpen },
-            { label: 'Partial', color: COLORS.valvePartial },
-            { label: 'Closed', color: COLORS.valveClosed },
-            { label: 'Fault', color: COLORS.valveFault },
-            { label: 'Offline', color: COLORS.valveOffline },
-          ].map(({ label, color }) => (
+            { label: 'Open', status: 'open', color: COLORS.valveOpen },
+            { label: 'Partial', status: 'partial', color: COLORS.valvePartial },
+            { label: 'Closed', status: 'closed', color: COLORS.valveClosed },
+            { label: 'Fault', status: 'fault', color: COLORS.valveFault },
+            { label: 'Offline', status: 'offline', color: COLORS.valveOffline },
+          ].map(({ label, status, color }) => (
             <View key={label} style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: color }]} />
+              <Ionicons name={getStatusIcon(status) as any} size={12} color={color} style={{ marginRight: 4 }} />
               <Text style={[styles.legendText, { color: colors.text }]}>{label}</Text>
             </View>
           ))}
@@ -273,7 +286,7 @@ export default function MapScreen() {
           {/* Action buttons */}
           <View style={styles.flowBtnRow}>
             <TouchableOpacity
-              style={[styles.flowBtnOpen, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              style={[styles.flowBtnOpen, { backgroundColor: COLORS.valveOpen }, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
               onPress={() => { openValve(selectedValve.device_id); setSliderVal(100); }}
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >
@@ -281,7 +294,7 @@ export default function MapScreen() {
               <Text style={styles.flowBtnText}>Open</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.flowBtnApply, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              style={[styles.flowBtnApply, { backgroundColor: COLORS.primary }, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
               onPress={() => setValvePosition(selectedValve.device_id, sliderVal)}
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >
@@ -289,7 +302,7 @@ export default function MapScreen() {
               <Text style={styles.flowBtnText}>Set {Math.round(sliderVal)}%</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.flowBtnClose, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              style={[styles.flowBtnClose, { backgroundColor: COLORS.valveClosed }, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
               onPress={() => { closeValve(selectedValve.device_id); setSliderVal(0); }}
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >

@@ -1,8 +1,17 @@
-// API Configuration
-export const API_URL = __DEV__ 
-  ? 'http://10.0.2.2:8000/api'  // Android emulator
-  : 'https://your-production-api.com/api';
+/**
+ * OrbiPulse API Configuration
+ */
+export const API_CONFIG = {
+  BASE_URL: 'https://api.orbipulse.com/v1', // Replace with actual API endpoint
+  TIMEOUT: 10000,
+  USE_MOCK_API: true, // Set to false when backend is ready
+};
 
-// App Configuration
-export const APP_NAME = 'OrbiPulse';
-export const APP_VERSION = '1.0.0';
+export const AUTH_ENDPOINTS = {
+  SEND_OTP: '/auth/send-otp',
+  VERIFY_OTP: '/auth/verify-otp',
+};
+
+export const FARMER_ENDPOINTS = {
+  PROFILE: '/farmers/profile',
+};
