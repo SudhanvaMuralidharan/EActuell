@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Spacing, Radius, FontSize } from '../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../constants/theme';
 
 interface MetricCardProps {
   label: string;
@@ -16,7 +16,7 @@ export default function MetricCard({
   label,
   value,
   unit,
-  color = Colors.textPrimary,
+  color = COLORS.text,
   icon,
   subtext,
   warning,
@@ -43,10 +43,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     minWidth: 100,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardWarning: {
-    borderColor: Colors.red,
-    backgroundColor: '#1A0D13',
+    borderColor: COLORS.danger,
+    backgroundColor: COLORS.dangerTransparent,
   },
   icon: {
     fontSize: FontSize.lg,

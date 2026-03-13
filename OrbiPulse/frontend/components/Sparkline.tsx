@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import Svg, { Polyline, Line, Rect, Defs, LinearGradient, Stop, Polygon } from 'react-native-svg';
 import { TelemetryPoint } from '../data/mockData';
+import { COLORS } from '../constants/colors';
 
 interface SparklineProps {
   data: TelemetryPoint[];
@@ -13,7 +14,7 @@ interface SparklineProps {
 
 export default function Sparkline({
   data,
-  color = '#00E5A0',
+  color = COLORS.primary,
   width = 120,
   height = 40,
   filled = true,

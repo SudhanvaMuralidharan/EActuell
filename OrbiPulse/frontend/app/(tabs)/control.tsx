@@ -20,7 +20,7 @@ import {
   getStatusColor,
   formatLastSeen,
 } from '../../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 
@@ -142,7 +142,7 @@ export default function ControlScreen() {
               >
                 <View style={[styles.pickerDot, { backgroundColor: color }]} />
                 <Text style={[styles.pickerId, active && { color }]}>{v.device_id}</Text>
-                {s.pending && <ActivityIndicator size={8} color={Colors.accent} style={{ marginTop: 2 }} />}
+                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={{ marginTop: 2 }} />}
               </TouchableOpacity>
             );
           })}
@@ -168,7 +168,7 @@ export default function ControlScreen() {
               </Text>
               {activeState.pending && (
                 <View style={styles.pendingRow}>
-                  <ActivityIndicator size="small" color={Colors.accent} />
+                  <ActivityIndicator size="small" color={COLORS.primary} />
                   <Text style={styles.pendingText}>Sending command…</Text>
                 </View>
               )}
@@ -183,7 +183,7 @@ export default function ControlScreen() {
           {/* Blocked notice */}
           {!isControllable && (
             <View style={styles.blockedBanner}>
-              <Ionicons name="ban" size={16} color={Colors.red} />
+              <Ionicons name="ban" size={16} color={COLORS.danger} />
               <Text style={styles.blockedText}>
                 Control disabled — valve is {activeState.status}
               </Text>
@@ -231,9 +231,9 @@ export default function ControlScreen() {
               step={5}
               value={sliderVal}
               onValueChange={setSliderVal}
-              minimumTrackTintColor={Colors.accent}
+              minimumTrackTintColor={COLORS.primary}
               maximumTrackTintColor={Colors.border}
-              thumbTintColor={Colors.accent}
+              thumbTintColor={COLORS.primary}
               disabled={!isControllable || activeState.pending}
             />
             <View style={styles.sliderTicks}>
@@ -269,7 +269,7 @@ export default function ControlScreen() {
                 <Text style={styles.statusCardId}>{v.device_id}</Text>
                 <Text style={[styles.statusCardPos, { color }]}>{s.position}%</Text>
                 <View style={[styles.statusCardDot, { backgroundColor: color }]} />
-                {s.pending && <ActivityIndicator size={8} color={Colors.accent} style={styles.statusPending} />}
+                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={styles.statusPending} />}
               </TouchableOpacity>
             );
           })}
@@ -299,13 +299,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
 
   header: { padding: Spacing.md, paddingBottom: Spacing.sm },
-  title: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.textPrimary },
-  subtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
+  title: { fontSize: FontSize.xxl, fontWeight: '800', color: COLORS.text },
+  subtitle: { fontSize: FontSize.sm, color: COLORS.dark, marginTop: 2 },
 
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
-    color: Colors.textMuted,
+    color: COLORS.dark,
     letterSpacing: 1,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   valvePickerBlocked: { opacity: 0.5 },
   pickerDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 4 },
-  pickerId: { fontSize: FontSize.xs, color: Colors.textSecondary, fontWeight: '700' },
+  pickerId: { fontSize: FontSize.xs, color: COLORS.dark, fontWeight: '700' },
 
   panel: {
     marginHorizontal: Spacing.md,
@@ -340,16 +340,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: Spacing.md,
   },
-  valveName: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary },
-  valveMeta: { fontSize: FontSize.xs, color: Colors.textSecondary, marginTop: 2 },
+  valveName: { fontSize: FontSize.lg, fontWeight: '700', color: COLORS.text },
+  valveMeta: { fontSize: FontSize.xs, color: COLORS.dark, marginTop: 2 },
 
   gaugeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, marginBottom: Spacing.md },
   gaugeInfo: { flex: 1 },
-  gaugeLabel: { fontSize: FontSize.xs, color: Colors.textSecondary },
+  gaugeLabel: { fontSize: FontSize.xs, color: COLORS.dark },
   gaugeValue: { fontSize: FontSize.xxxl, fontWeight: '900', marginTop: 2 },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.xs },
-  pendingText: { fontSize: FontSize.xs, color: Colors.accent },
-  lastCmdText: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.xs, lineHeight: 16 },
+  pendingText: { fontSize: FontSize.xs, color: COLORS.primary },
+  pendingText: { fontSize: FontSize.xs, color: COLORS.primary },
+  lastCmdText: { fontSize: FontSize.xs, color: COLORS.dark, marginTop: Spacing.xs, lineHeight: 16 },
 
   blockedBanner: {
     flexDirection: 'row',
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
   sliderValue: { fontSize: FontSize.sm, fontWeight: '800', color: Colors.accent },
   slider: { width: '100%', height: 40 },
   sliderTicks: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -8 },
-  sliderTick: { fontSize: 10, color: Colors.textMuted },
+  sliderTick: { fontSize: 10, color: COLORS.dark },
   setBtn: {
     backgroundColor: Colors.surfaceHigh,
     borderRadius: Radius.md,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
 
   logBox: {
     marginHorizontal: Spacing.md,
-    backgroundColor: '#020810',
+    backgroundColor: COLORS.card,
     borderRadius: Radius.md,
     padding: Spacing.sm,
     borderWidth: 1,
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     marginBottom: Spacing.md,
   },
-  logEntry: { fontSize: 11, color: Colors.textMuted, fontFamily: 'monospace', marginBottom: 2 },
-  logAck: { color: Colors.accent },
-  logNack: { color: Colors.red },
+  logEntry: { fontSize: 11, color: COLORS.dark, fontFamily: 'monospace', marginBottom: 2 },
+  logAck: { color: COLORS.primary },
+  logNack: { color: COLORS.danger },
 });

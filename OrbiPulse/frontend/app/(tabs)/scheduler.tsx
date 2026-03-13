@@ -19,7 +19,7 @@ import {
   IrrigationSchedule,
   DAYS_OF_WEEK,
 } from '../../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 
 let nextId = 10;
 
@@ -141,15 +141,15 @@ export default function SchedulerScreen() {
             <Text style={styles.summaryLabel}>Total</Text>
           </View>
           <View style={styles.summaryCard}>
-            <Text style={[styles.summaryValue, { color: Colors.accent }]}>{activeSchedules.length}</Text>
+            <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{activeSchedules.length}</Text>
             <Text style={styles.summaryLabel}>Active</Text>
           </View>
           <View style={styles.summaryCard}>
-            <Text style={[styles.summaryValue, { color: Colors.blue }]}>{todaySchedules.length}</Text>
+            <Text style={[styles.summaryValue, { color: COLORS.secondary }]}>{todaySchedules.length}</Text>
             <Text style={styles.summaryLabel}>Today</Text>
           </View>
           <View style={styles.summaryCard}>
-            <Text style={[styles.summaryValue, { color: Colors.orange }]}>{Math.round(totalMinutesDay)}m</Text>
+            <Text style={[styles.summaryValue, { color: COLORS.warning }]}>{Math.round(totalMinutesDay)}m</Text>
             <Text style={styles.summaryLabel}>Avg/Day</Text>
           </View>
         </View>
@@ -195,7 +195,7 @@ export default function SchedulerScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editTarget ? 'Edit Schedule' : 'New Schedule'}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)}>
-              <Ionicons name="close" size={24} color={Colors.textSecondary} />
+              <Ionicons name="close" size={24} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
 
@@ -212,7 +212,7 @@ export default function SchedulerScreen() {
                   ]}
                   onPress={() => setFormValveId(v.device_id)}
                 >
-                  <Text style={[styles.valveOptionId, formValveId === v.device_id && { color: Colors.accent }]}>
+                  <Text style={[styles.valveOptionId, formValveId === v.device_id && { color: COLORS.primary }]}>
                     {v.device_id}
                   </Text>
                   <Text style={styles.valveOptionName} numberOfLines={1}>{v.name}</Text>
@@ -227,7 +227,7 @@ export default function SchedulerScreen() {
               value={formStartTime}
               onChangeText={setFormStartTime}
               placeholder="06:00"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={COLORS.dark}
               keyboardType="numbers-and-punctuation"
             />
 
@@ -238,7 +238,7 @@ export default function SchedulerScreen() {
               value={formDuration}
               onChangeText={setFormDuration}
               placeholder="30"
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={COLORS.dark}
               keyboardType="number-pad"
             />
 

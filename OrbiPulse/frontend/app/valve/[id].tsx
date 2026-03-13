@@ -20,7 +20,7 @@ import {
   formatLastSeen,
   TelemetryPoint,
 } from '../../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 import Sparkline from '../../components/Sparkline';

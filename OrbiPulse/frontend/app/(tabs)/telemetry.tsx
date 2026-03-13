@@ -21,7 +21,7 @@ import {
   formatLastSeen,
   TelemetryPoint,
 } from '../../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
+import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge from '../../components/StatusBadge';
 import Sparkline from '../../components/Sparkline';
