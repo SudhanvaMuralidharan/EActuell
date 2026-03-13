@@ -7,11 +7,13 @@ import {
   ScrollView,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker, Callout, Region } from 'react-native-maps';
+import Slider from '@react-native-community/slider';
 
 import {
   VALVES,
@@ -23,6 +25,7 @@ import {
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useValves } from '../../context/ValveContext';
 import ProfileModal from '../../components/profile/ProfileModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -52,9 +55,10 @@ export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const { colors, isDark } = useTheme();
+  const { states, openValve, closeValve, setValvePosition } = useValves();
   const [filter, setFilter] = useState<ValveStatus | 'all'>('all');
   const [selectedValve, setSelectedValve] = useState<Valve | null>(null);
-  const [profileVisible, setProfileVisible] = useState(false);
+  const [sliderVal, setSliderVal] = useState<number>(0);
 
   const filteredValves = filter === 'all'
     ? VALVES
@@ -65,12 +69,9 @@ export default function MapScreen() {
     return acc;
   }, {} as Record<string, number>);
 
-  const openCount    = VALVES.filter(v => v.status === 'open').length;
-  const faultCount   = VALVES.filter(v => v.status === 'fault').length;
-  const offlineCount = VALVES.filter(v => v.status === 'offline').length;
-
   const handleMarkerPress = (valve: Valve) => {
     setSelectedValve(valve);
+    setSliderVal(states[valve.device_id]?.position ?? valve.valve_position);
   };
 
   const handleNavigateToDetail = (valve: Valve) => {
@@ -78,35 +79,7 @@ export default function MapScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.logo, { color: COLORS.primary }]}>OrbiPulse</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Smart Valve Network</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.profileButton}
-            onPress={() => setProfileVisible(true)}
-          >
-            <Ionicons name="person-circle-outline" size={32} color={COLORS.primary} />
-          </TouchableOpacity>
-          <View style={styles.statsRow}>
-            <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={[styles.dot, { backgroundColor: COLORS.primary }]} />
-              <Text style={[styles.statText, { color: colors.text }]}>{openCount} Live</Text>
-            </View>
-            {faultCount > 0 && (
-              <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: COLORS.danger + '66' }]}>
-                <View style={[styles.dot, { backgroundColor: COLORS.danger }]} />
-                <Text style={[styles.statText, { color: COLORS.danger }]}>{faultCount} Fault</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* Filter chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}
         style={styles.filterBar} contentContainerStyle={styles.filterContent}>
@@ -138,43 +111,64 @@ export default function MapScreen() {
           mapType="hybrid"
         >
           {/* Valve markers */}
-          {filteredValves.map((valve) => (
-            <Marker
-              key={valve.device_id}
-              coordinate={{ latitude: valve.lat, longitude: valve.lng }}
-              pinColor={getMarkerColor(valve.status)}
-              onPress={() => handleMarkerPress(valve)}
-            >
-              <Callout tooltip onPress={() => handleNavigateToDetail(valve)}>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>{valve.name}</Text>
-                  <Text style={styles.calloutSubtitle}>{valve.device_id} · {valve.zone}</Text>
-                  <View style={styles.calloutDivider} />
-                  <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Status</Text>
-                    <Text style={[styles.calloutValue, { color: getMarkerColor(valve.status) }]}>
-                      {valve.status.charAt(0).toUpperCase() + valve.status.slice(1)}
-                    </Text>
-                  </View>
-                  <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Position</Text>
-                    <Text style={styles.calloutValue}>{valve.valve_position}%</Text>
-                  </View>
-                  <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Battery</Text>
-                    <Text style={styles.calloutValue}>{valve.battery_voltage.toFixed(1)}V</Text>
-                  </View>
-                  <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Last seen</Text>
-                    <Text style={styles.calloutValue}>{formatLastSeen(valve.last_seen)}</Text>
-                  </View>
-                  <View style={styles.calloutFooter}>
-                    <Text style={styles.calloutAction}>Tap for details →</Text>
-                  </View>
+          {filteredValves.map((valve) => {
+            const isSelected = selectedValve?.device_id === valve.device_id;
+            const markerColor = getMarkerColor(states[valve.device_id]?.status ?? valve.status);
+            const size = isSelected ? 44 : 34;
+
+            return (
+              <Marker
+                key={valve.device_id}
+                coordinate={{ latitude: valve.lat, longitude: valve.lng }}
+                onPress={() => handleMarkerPress(valve)}
+              >
+                <View 
+                  pointerEvents="none"
+                  style={[
+                    styles.pumpMarkerContainer, 
+                    { 
+                      backgroundColor: markerColor, 
+                      width: size, 
+                      height: size, 
+                      borderRadius: size / 2,
+                      borderColor: colors.card,
+                      borderWidth: isSelected ? 3 : 2,
+                    }
+                  ]}
+                >
+                  <MaterialCommunityIcons 
+                    name="pump" 
+                    size={size * 0.6} 
+                    color={COLORS.white} 
+                  />
                 </View>
-              </Callout>
-            </Marker>
-          ))}
+                <Callout tooltip onPress={() => handleNavigateToDetail(valve)}>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{valve.name}</Text>
+                    <Text style={styles.calloutSubtitle}>{valve.device_id} · {valve.zone}</Text>
+                    <View style={styles.calloutDivider} />
+                    <View style={styles.calloutRow}>
+                      <Text style={styles.calloutLabel}>Status</Text>
+                      <Text style={[styles.calloutValue, { color: markerColor }]}>
+                        {(states[valve.device_id]?.status ?? valve.status).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.calloutRow}>
+                      <Text style={styles.calloutLabel}>Position</Text>
+                      <Text style={styles.calloutValue}>{states[valve.device_id]?.position ?? valve.valve_position}%</Text>
+                    </View>
+                    <View style={styles.calloutRow}>
+                      <Text style={styles.calloutLabel}>Battery</Text>
+                      <Text style={styles.calloutValue}>{valve.battery_voltage.toFixed(1)}V</Text>
+                    </View>
+                    <View style={styles.calloutFooter}>
+                      <Text style={styles.calloutAction}>Control Flow →</Text>
+                    </View>
+                  </View>
+                </Callout>
+              </Marker>
+            );
+          })}
 
           {/* Gateway markers */}
           {GATEWAYS.map((gw) => (
@@ -230,7 +224,7 @@ export default function MapScreen() {
       {selectedValve && (
         <View style={[styles.bottomCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.bottomCardHeader}>
-            <View style={[styles.statusDot, { backgroundColor: getMarkerColor(selectedValve.status) }]} />
+            <View style={[styles.statusDot, { backgroundColor: getMarkerColor(states[selectedValve.device_id]?.status ?? selectedValve.status) }]} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.bottomCardTitle, { color: colors.text }]}>{selectedValve.name}</Text>
               <Text style={[styles.bottomCardSubtitle, { color: colors.textSecondary }]}>{selectedValve.device_id} · {selectedValve.zone}</Text>
@@ -239,36 +233,72 @@ export default function MapScreen() {
               <Ionicons name="close-circle" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
-          <View style={styles.bottomCardMetrics}>
-            {[
-              { label: 'Position', value: `${selectedValve.valve_position}%` },
-              { label: 'Battery', value: `${selectedValve.battery_voltage.toFixed(1)}V` },
-              { label: 'Temp', value: `${selectedValve.internal_temp}°C` },
-              { label: 'Signal', value: `${selectedValve.signal_strength}dBm` },
-            ].map(({ label, value }) => (
-              <View key={label} style={[styles.bottomMetric, { backgroundColor: colors.background }]}>
-                <Text style={[styles.bottomMetricLabel, { color: colors.textSecondary }]}>{label}</Text>
-                <Text style={[styles.bottomMetricValue, { color: colors.text }]}>{value}</Text>
-              </View>
-            ))}
+
+          {/* Current position display */}
+          <View style={[styles.flowPositionRow, { backgroundColor: colors.background }]}>
+            <Text style={[styles.flowPositionLabel, { color: colors.textSecondary }]}>Current Position</Text>
+            <Text style={[styles.flowPositionValue, { color: getMarkerColor(states[selectedValve.device_id]?.status ?? selectedValve.status) }]}>
+              {states[selectedValve.device_id]?.position ?? selectedValve.valve_position}%
+            </Text>
+            {states[selectedValve.device_id]?.pending && (
+              <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />
+            )}
           </View>
-          <TouchableOpacity
-            style={styles.detailBtn}
-            onPress={() => handleNavigateToDetail(selectedValve)}
-          >
-            <Text style={styles.detailBtnText}>View Full Details</Text>
-            <Ionicons name="arrow-forward" size={14} color={COLORS.white} />
-          </TouchableOpacity>
+
+          {/* Flow rate slider */}
+          <View style={styles.flowSliderSection}>
+            <View style={styles.flowSliderLabelRow}>
+              <Text style={[styles.flowSliderLabel, { color: colors.textSecondary }]}>Adjust Flow Rate</Text>
+              <Text style={[styles.flowSliderValue, { color: Colors.accent }]}>{Math.round(sliderVal)}%</Text>
+            </View>
+            <Slider
+              style={{ width: '100%', height: 36 }}
+              minimumValue={0}
+              maximumValue={100}
+              step={5}
+              value={sliderVal}
+              onValueChange={setSliderVal}
+              minimumTrackTintColor={COLORS.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={COLORS.primary}
+              disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
+            />
+            <View style={styles.flowSliderTicks}>
+              {[0, 25, 50, 75, 100].map((t) => (
+                <Text key={t} style={[styles.flowSliderTick, { color: colors.textMuted }]}>{t}%</Text>
+              ))}
+            </View>
+          </View>
+
+          {/* Action buttons */}
+          <View style={styles.flowBtnRow}>
+            <TouchableOpacity
+              style={[styles.flowBtnOpen, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              onPress={() => { openValve(selectedValve.device_id); setSliderVal(100); }}
+              disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
+            >
+              <Ionicons name="water" size={16} color="#fff" />
+              <Text style={styles.flowBtnText}>Open</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.flowBtnApply, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              onPress={() => setValvePosition(selectedValve.device_id, sliderVal)}
+              disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
+            >
+              <Ionicons name="checkmark-circle" size={16} color="#fff" />
+              <Text style={styles.flowBtnText}>Set {Math.round(sliderVal)}%</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.flowBtnClose, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
+              onPress={() => { closeValve(selectedValve.device_id); setSliderVal(0); }}
+              disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
+            >
+              <Ionicons name="close-circle" size={16} color="#fff" />
+              <Text style={styles.flowBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
-
-      {/* Profile Modal */}
-      <ProfileModal
-        visible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        onNavigateSettings={() => router.push('/screens/settings/SettingsScreen' as any)}
-        onNavigateAbout={() => router.push('/screens/about/AboutScreen' as any)}
-      />
     </SafeAreaView>
   );
 }
@@ -338,6 +368,31 @@ const styles = StyleSheet.create({
   calloutFooter: { marginTop: 8, alignItems: 'center' },
   calloutAction: { fontSize: FontSize.xs, color: COLORS.primary, fontWeight: '600' },
 
+  // Custom Markers
+  pumpMarkerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pumpMarker: {
+    backgroundColor: COLORS.primary,
+    padding: 6,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  pumpMarkerText: {
+    fontSize: FontSize.xs,
+    fontWeight: '700',
+    color: COLORS.white,
+  },
+  statsPillLabel: { fontSize: 9, color: COLORS.dark },
+  statsPillValue: { fontSize: FontSize.xs, fontWeight: '700', color: COLORS.text },
+
   // Legend
   legend: {
     position: 'absolute', bottom: 12, left: 12,
@@ -377,9 +432,36 @@ const styles = StyleSheet.create({
   },
   bottomMetricLabel: { fontSize: 10, color: COLORS.dark },
   bottomMetricValue: { fontSize: FontSize.sm, fontWeight: '700', color: COLORS.text, marginTop: 2 },
-  detailBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: COLORS.primary, paddingVertical: Spacing.sm, borderRadius: Radius.md,
+
+  // Flow control styles
+  flowPositionRow: {
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: Radius.sm, padding: 10, marginBottom: 10,
   },
-  detailBtnText: { fontSize: FontSize.sm, fontWeight: '700', color: COLORS.white },
+  flowPositionLabel: { fontSize: FontSize.xs, fontWeight: '600', flex: 1 },
+  flowPositionValue: { fontSize: FontSize.xl, fontWeight: '900' },
+  flowSliderSection: { marginBottom: 10 },
+  flowSliderLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
+  flowSliderLabel: { fontSize: FontSize.xs, fontWeight: '600' },
+  flowSliderValue: { fontSize: FontSize.sm, fontWeight: '800' },
+  flowSliderTicks: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4 },
+  flowSliderTick: { fontSize: 9 },
+  flowBtnRow: { flexDirection: 'row', gap: 8 },
+  flowBtnOpen: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, paddingVertical: 10, borderRadius: Radius.md,
+    backgroundColor: Colors.accent,
+  },
+  flowBtnApply: {
+    flex: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, paddingVertical: 10, borderRadius: Radius.md,
+    backgroundColor: COLORS.primary,
+  },
+  flowBtnClose: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, paddingVertical: 10, borderRadius: Radius.md,
+    backgroundColor: Colors.blue,
+  },
+  flowBtnDisabled: { opacity: 0.35 },
+  flowBtnText: { fontSize: FontSize.xs, fontWeight: '800', color: '#fff' },
 });

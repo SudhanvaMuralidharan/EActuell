@@ -23,6 +23,7 @@ import {
 } from '../../data/mockData';
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useValves } from '../../context/ValveContext';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge from '../../components/StatusBadge';
 import Sparkline from '../../components/Sparkline';
@@ -36,6 +37,7 @@ interface ValveTelemetry {
 
 export default function TelemetryScreen() {
   const { colors } = useTheme();
+  const { openCount, faultCount, offlineCount } = useValves();
   const [selected, setSelected] = useState<string>(VALVES[0].device_id);
   const [telemetryData, setTelemetryData] = useState<Record<string, ValveTelemetry>>({});
   const [tick, setTick] = useState(0);
@@ -53,10 +55,7 @@ export default function TelemetryScreen() {
       };
     });
     setTelemetryData(initial);
-  }, []);
 
-  // Simulate live telemetry updates every 3 s
-  useEffect(() => {
     const interval = setInterval(() => {
       setTick((t) => t + 1);
       setTelemetryData((prev) => {
@@ -93,28 +92,14 @@ export default function TelemetryScreen() {
   const activeValve = VALVES.find((v) => v.device_id === selected)!;
   const activeTd   = telemetryData[selected];
 
-  const faultCount   = VALVES.filter((v) => v.status === 'fault').length;
-  const offlineCount = VALVES.filter((v) => v.status === 'offline').length;
-  const onlineCount  = VALVES.filter((v) => v.status !== 'offline').length;
-
   const isAbnormal = (v: Valve) =>
     v.battery_voltage < 3.3 || v.motor_current > 2.0 || v.internal_temp > 45 || v.status === 'fault';
 
-  return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: colors.text }]}>Telemetry</Text>
-            <View style={styles.liveRow}>
-              <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
-              <Text style={styles.liveText}>LIVE · updates every 3s</Text>
-            </View>
-          </View>
-          <Text style={[styles.timestamp, { color: colors.textMuted }]}>{new Date().toLocaleTimeString()}</Text>
-        </View>
+  const onlineCount = VALVES.length - offlineCount;
 
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Summary metrics */}
         <View style={styles.section}>
           <View style={styles.metricsRow}>
