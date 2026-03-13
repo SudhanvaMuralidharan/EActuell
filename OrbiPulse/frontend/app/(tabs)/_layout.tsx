@@ -5,9 +5,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import GlobalHeader from '../../components/GlobalHeader';
+import { useAuth } from '../../context/AuthContext';
+import { Redirect } from 'expo-router';
 
 export default function TabLayout() {
   const { colors, showTelemetry } = useTheme();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Redirect href="/auth/login" />;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>

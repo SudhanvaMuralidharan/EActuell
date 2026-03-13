@@ -1,114 +1,110 @@
-import { API_URL } from '../config';
+import { API_CONFIG, AUTH_ENDPOINTS, FARMER_ENDPOINTS } from '../config';
 
-export interface SendOtpRequest {
+export interface User {
+  id: string;
   phone: string;
-}
-
-export interface VerifyOtpRequest {
-  phone: string;
-  otp: string;
-}
-
-export interface FarmerProfileRequest {
-  phone: string;
-  name: string;
-  profile_image?: string;
+  name?: string;
+  profileImage?: string;
 }
 
 export interface AuthResponse {
-  success: boolean;
-  token?: string;
-  user?: {
-    id: string;
-    phone: string;
-    name: string;
-    profile_image?: string;
-  };
-  message?: string;
+  token: string;
+  user: User;
 }
 
 /**
- * Send OTP to phone number
+ * Authentication Service Layer
  */
-export async function sendOtp(phone: string): Promise<AuthResponse> {
-  try {
-    const response = await fetch(`${API_URL}/auth/send-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ phone }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to send OTP');
+const authService = {
+  /**
+   * Send OTP to the provided phone number
+   */
+  sendOtp: async (phone: string): Promise<boolean> => {
+    if (API_CONFIG.USE_MOCK_API) {
+      console.log(`[MOCK] Sending OTP to ${phone}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return true;
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Send OTP Error:', error);
-    throw error;
-  }
-}
-
-/**
- * Verify OTP code
- */
-export async function verifyOtp(
-  phone: string,
-  otp: string
-): Promise<AuthResponse> {
-  try {
-    const response = await fetch(`${API_URL}/auth/verify-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ phone, otp }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Invalid OTP');
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${AUTH_ENDPOINTS.SEND_OTP}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to send OTP');
+      
+      return true;
+    } catch (error) {
+      console.error('Send OTP Error:', error);
+      throw error;
     }
+  },
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Verify OTP Error:', error);
-    throw error;
-  }
-}
-
-/**
- * Submit farmer profile
- */
-export async function submitFarmerProfile(
-  phone: string,
-  name: string,
-  profileImage?: string
-): Promise<AuthResponse> {
-  try {
-    const response = await fetch(`${API_URL}/farmers/profile`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phone,
-        name,
-        ...(profileImage && { profile_image: profileImage }),
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create profile');
+  /**
+   * Verify OTP and return user session
+   */
+  verifyOtp: async (phone: string, otp: string): Promise<AuthResponse> => {
+    if (API_CONFIG.USE_MOCK_API) {
+      console.log(`[MOCK] Verifying OTP ${otp} for ${phone}`);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Demo Purpose: Accept any OTP
+      return {
+        token: 'mock-jwt-token',
+        user: { id: 'u1', phone, name: '' }
+      };
     }
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${AUTH_ENDPOINTS.VERIFY_OTP}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp }),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'OTP Verification failed');
+      
+      return data as AuthResponse;
+    } catch (error) {
+      console.error('Verify OTP Error:', error);
+      throw error;
+    }
+  },
 
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Submit Profile Error:', error);
-    throw error;
+  /**
+   * Update farmer profile details
+   */
+  updateProfile: async (
+    token: string, 
+    phone: string, 
+    name: string, 
+    profileImageBase64?: string
+  ): Promise<User> => {
+    if (API_CONFIG.USE_MOCK_API) {
+      console.log(`[MOCK] Updating profile for ${phone}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { id: 'u1', phone, name, profileImage: profileImageBase64 };
+    }
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${FARMER_ENDPOINTS.PROFILE}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone, name, profile_image: profileImageBase64 }),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Profile update failed');
+      
+      return data as User;
+    } catch (error) {
+      console.error('Profile Update Error:', error);
+      throw error;
+    }
   }
-}
+};
+
+export default authService;

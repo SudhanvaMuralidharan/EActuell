@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import ProfileMenuItem from './ProfileMenuItem';
+import { useAuth } from '../../context/AuthContext';
 
 export interface ProfileModalProps {
   visible: boolean;
@@ -18,20 +19,20 @@ export interface ProfileModalProps {
   onNavigateAbout: () => void;
 }
 
-// Mock user data - replace with actual user data from auth context
-const USER_DATA = {
-  name: 'John Doe',
-  email: 'john.doe@farm.com',
-};
-
 export default function ProfileModal({
   visible,
   onClose,
   onNavigateSettings,
   onNavigateAbout,
 }: ProfileModalProps) {
-  const { theme, setTheme, toggleTheme, isDark, colors, showTelemetry, toggleTelemetry } = useTheme();
+  const { colors, toggleTheme, isDark, showTelemetry, toggleTelemetry } = useTheme();
+  const { user, logout } = useAuth();
   
+  const handleLogout = async () => {
+    await logout();
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -53,8 +54,8 @@ export default function ProfileModal({
               <Ionicons name="person-circle" size={40} color={COLORS.primary} />
             </View>
             <View style={styles.userDetails}>
-              <Text style={[styles.userName, { color: colors.text }]}>{USER_DATA.name}</Text>
-              <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{USER_DATA.email}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{user?.name || 'Farmer'}</Text>
+              <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.phone || 'No phone'}</Text>
             </View>
           </View>
           
@@ -113,6 +114,15 @@ export default function ProfileModal({
                 onNavigateAbout();
               }}
               color={colors.textSecondary}
+            />
+            
+            <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: 8 }]} />
+            
+            <ProfileMenuItem
+              icon="log-out-outline"
+              label="Log Out"
+              onPress={handleLogout}
+              color={COLORS.danger}
             />
           </View>
         </TouchableOpacity>

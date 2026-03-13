@@ -43,8 +43,8 @@ export default function GlobalHeader() {
       <ProfileModal
         visible={profileVisible}
         onClose={() => setProfileVisible(false)}
-        onNavigateSettings={() => router.push('/screens/settings/SettingsScreen' as any)}
-        onNavigateAbout={() => router.push('/screens/about/AboutScreen' as any)}
+        onNavigateSettings={() => router.push('/settings' as any)}
+        onNavigateAbout={() => router.push('/about' as any)}
       />
     </>
   );
