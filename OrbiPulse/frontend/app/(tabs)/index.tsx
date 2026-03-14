@@ -26,6 +26,7 @@ import {
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -65,6 +66,7 @@ export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { valves, states, openValve, closeValve, setValvePosition } = useValves();
   const [filter, setFilter] = useState<ValveStatus | 'all'>('all');
   const [selectedValve, setSelectedValve] = useState<Valve | null>(null);
@@ -87,6 +89,11 @@ export default function MapScreen() {
     router.push(`/valve/${valve.device_id}` as any);
   };
 
+  const getStatusLabel = (s: string) => {
+    if (s === 'all') return t('all');
+    return t(`status_${s}` as any);
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* Filter chips */}
@@ -102,7 +109,7 @@ export default function MapScreen() {
               onPress={() => setFilter(s)}>
               <Ionicons name={icon as any} size={14} color={active ? color : colors.textMuted} style={{ marginRight: 6 }} />
               <Text style={[styles.filterText, { color: colors.textSecondary }, active && { color }]}>
-                {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}{' '}
+                {getStatusLabel(s)}{' '}
                 <Text style={styles.filterCount}>({statusCounts[s]})</Text>
               </Text>
             </TouchableOpacity>
@@ -159,21 +166,21 @@ export default function MapScreen() {
                     <Text style={styles.calloutSubtitle}>{valve.device_id} · {valve.zone}</Text>
                     <View style={styles.calloutDivider} />
                     <View style={styles.calloutRow}>
-                      <Text style={styles.calloutLabel}>Status</Text>
+                      <Text style={styles.calloutLabel}>{t('status')}</Text>
                       <Text style={[styles.calloutValue, { color: markerColor }]}>
-                        {(states[valve.device_id]?.status ?? valve.status).toUpperCase()}
+                        {t(`status_${states[valve.device_id]?.status ?? valve.status}` as any)}
                       </Text>
                     </View>
                     <View style={styles.calloutRow}>
-                      <Text style={styles.calloutLabel}>Position</Text>
+                      <Text style={styles.calloutLabel}>{t('position')}</Text>
                       <Text style={styles.calloutValue}>{states[valve.device_id]?.position ?? valve.valve_position}%</Text>
                     </View>
                     <View style={styles.calloutRow}>
-                      <Text style={styles.calloutLabel}>Battery</Text>
+                      <Text style={styles.calloutLabel}>{t('battery')}</Text>
                       <Text style={styles.calloutValue}>{valve.battery_voltage.toFixed(1)}V</Text>
                     </View>
                     <View style={styles.calloutFooter}>
-                      <Text style={styles.calloutAction}>Control Flow →</Text>
+                      <Text style={styles.calloutAction}>{t('control_flow')} →</Text>
                     </View>
                   </View>
                 </Callout>
@@ -197,15 +204,15 @@ export default function MapScreen() {
                   <Text style={styles.calloutSubtitle}>{gw.gateway_id}</Text>
                   <View style={styles.calloutDivider} />
                   <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Valves</Text>
+                    <Text style={styles.calloutLabel}>{t('valves')}</Text>
                     <Text style={styles.calloutValue}>{gw.connected_valves}</Text>
                   </View>
                   <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Signal</Text>
+                    <Text style={styles.calloutLabel}>{t('signal')}</Text>
                     <Text style={styles.calloutValue}>{gw.signal_strength} dBm</Text>
                   </View>
                   <View style={styles.calloutRow}>
-                    <Text style={styles.calloutLabel}>Uptime</Text>
+                    <Text style={styles.calloutLabel}>{t('uptime')}</Text>
                     <Text style={styles.calloutValue}>{gw.uptime_hours}h</Text>
                   </View>
                 </View>
@@ -217,13 +224,13 @@ export default function MapScreen() {
         {/* Map legend */}
         <View style={[styles.legend, { backgroundColor: colors.card + 'EE', borderColor: colors.border }]}>
           {[
-            { label: 'Open', status: 'open', color: COLORS.valveOpen },
-            { label: 'Partial', status: 'partial', color: COLORS.valvePartial },
-            { label: 'Closed', status: 'closed', color: COLORS.valveClosed },
-            { label: 'Fault', status: 'fault', color: COLORS.valveFault },
-            { label: 'Offline', status: 'offline', color: COLORS.valveOffline },
+            { label: t('status_open'), status: 'open', color: COLORS.valveOpen },
+            { label: t('status_partial'), status: 'partial', color: COLORS.valvePartial },
+            { label: t('status_closed'), status: 'closed', color: COLORS.valveClosed },
+            { label: t('status_fault'), status: 'fault', color: COLORS.valveFault },
+            { label: t('status_offline'), status: 'offline', color: COLORS.valveOffline },
           ].map(({ label, status, color }) => (
-            <View key={label} style={styles.legendItem}>
+            <View key={status} style={styles.legendItem}>
               <Ionicons name={getStatusIcon(status) as any} size={12} color={color} style={{ marginRight: 4 }} />
               <Text style={[styles.legendText, { color: colors.text }]}>{label}</Text>
             </View>
@@ -247,7 +254,7 @@ export default function MapScreen() {
 
           {/* Current position display */}
           <View style={[styles.flowPositionRow, { backgroundColor: colors.background }]}>
-            <Text style={[styles.flowPositionLabel, { color: colors.textSecondary }]}>Current Position</Text>
+            <Text style={[styles.flowPositionLabel, { color: colors.textSecondary }]}>{t('current_position')}</Text>
             <Text style={[styles.flowPositionValue, { color: getMarkerColor(states[selectedValve.device_id]?.status ?? selectedValve.status) }]}>
               {states[selectedValve.device_id]?.position ?? selectedValve.valve_position}%
             </Text>
@@ -259,7 +266,7 @@ export default function MapScreen() {
           {/* Flow rate slider */}
           <View style={styles.flowSliderSection}>
             <View style={styles.flowSliderLabelRow}>
-              <Text style={[styles.flowSliderLabel, { color: colors.textSecondary }]}>Adjust Flow Rate</Text>
+              <Text style={[styles.flowSliderLabel, { color: colors.textSecondary }]}>{t('adjust_flow')}</Text>
               <Text style={[styles.flowSliderValue, { color: Colors.accent }]}>{Math.round(sliderVal)}%</Text>
             </View>
             <Slider
@@ -289,7 +296,7 @@ export default function MapScreen() {
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >
               <Ionicons name="water" size={16} color="#fff" />
-              <Text style={styles.flowBtnText}>Open</Text>
+              <Text style={styles.flowBtnText}>{t('open')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.flowBtnApply, { backgroundColor: COLORS.primary }, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
@@ -297,7 +304,7 @@ export default function MapScreen() {
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >
               <Ionicons name="checkmark-circle" size={16} color="#fff" />
-              <Text style={styles.flowBtnText}>Set {Math.round(sliderVal)}%</Text>
+              <Text style={styles.flowBtnText}>{t('set')} {Math.round(sliderVal)}%</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.flowBtnClose, { backgroundColor: COLORS.valveClosed }, (states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault') && styles.flowBtnDisabled]}
@@ -305,7 +312,7 @@ export default function MapScreen() {
               disabled={states[selectedValve.device_id]?.pending || selectedValve.status === 'offline' || selectedValve.status === 'fault'}
             >
               <Ionicons name="close-circle" size={16} color="#fff" />
-              <Text style={styles.flowBtnText}>Close</Text>
+              <Text style={styles.flowBtnText}>{t('close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

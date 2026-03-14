@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "OrbiPulse Smart Irrigation API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
+    DATABASE_URL: str = ""
 
     # JWT
     SECRET_KEY: str = "orbipulse-secret-key-change-in-production"

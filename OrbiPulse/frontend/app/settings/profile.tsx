@@ -19,11 +19,13 @@ import { COLORS, Spacing, Radius, FontSize } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { pickProfileImage } from '../../utils/imagePicker';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ProfileEditScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { user, updateUserProfile } = useAuth();
+  const { t } = useLanguage();
   
   const [name, setName] = useState(user?.name || '');
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profileImage);
@@ -36,24 +38,24 @@ export default function ProfileEditScreen() {
         setProfileImage(base64);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to pick image');
+      Alert.alert(t('error'), error.message || 'Failed to pick image');
     }
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Missing Name', 'Please enter your name');
+      Alert.alert(t('missing_name'), t('enter_name_alert'));
       return;
     }
 
     setIsSaving(true);
     try {
       await updateUserProfile(name.trim(), profileImage);
-      Alert.alert('Success', 'Profile updated successfully', [
+      Alert.alert(t('success'), t('profile_updated'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error: any) {
-      Alert.alert('Update Failed', error.message || 'Something went wrong');
+      Alert.alert(t('update_failed'), error.message || 'Something went wrong');
     } finally {
       setIsSaving(false);
     }
@@ -69,7 +71,7 @@ export default function ProfileEditScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('edit_profile')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -91,18 +93,18 @@ export default function ProfileEditScreen() {
               </View>
             </TouchableOpacity>
             <Text style={[styles.imageHint, { color: colors.textMuted }]}>
-              Tap to change profile photo
+              {t('tap_change_photo')}
             </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Full Name</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('full_name')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
-                  placeholder="Enter your name"
+                  placeholder={t('enter_name')}
                   placeholderTextColor={colors.textMuted}
                   value={name}
                   onChangeText={setName}
@@ -112,7 +114,7 @@ export default function ProfileEditScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Phone Number</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>{t('phone_number')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border, opacity: 0.7 }]}>
                 <Ionicons name="call-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
                 <TextInput
@@ -122,7 +124,7 @@ export default function ProfileEditScreen() {
                 />
                 <MaterialCommunityIcons name="lock" size={16} color={colors.textMuted} />
               </View>
-              <Text style={styles.inputHint}>Phone number cannot be changed</Text>
+              <Text style={styles.inputHint}>{t('phone_no_change')}</Text>
             </View>
           </View>
 
@@ -134,7 +136,7 @@ export default function ProfileEditScreen() {
             {isSaving ? (
               <ActivityIndicator color={COLORS.white} />
             ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
+              <Text style={styles.saveButtonText}>{t('save_changes')}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

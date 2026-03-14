@@ -5,6 +5,7 @@ import { COLORS } from '../constants/theme';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ValveProvider } from '../context/ValveContext';
+import { LanguageProvider } from '../context/LanguageContext';
 
 function RootContent() {
   const { colors, isDark } = useTheme();
@@ -59,9 +60,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ValveProvider>
-          <RootContent />
-        </ValveProvider>
+        <LanguageProvider>
+          <ValveProvider>
+            <RootContent />
+          </ValveProvider>
+        </LanguageProvider>
       </AuthProvider>
     </ThemeProvider>
   );

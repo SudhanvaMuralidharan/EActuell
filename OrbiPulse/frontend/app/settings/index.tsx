@@ -1,10 +1,11 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,8 @@ import { useRouter } from 'expo-router';
 import { COLORS, Spacing, Radius, FontSize } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { Language } from '../../constants/translations';
 
 interface SettingItemProps {
   icon: string;
@@ -42,57 +45,73 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { toggleTheme, isDark, colors } = useTheme();
   const { user } = useAuth();
-  
+  const { t, language, setLanguage } = useLanguage();
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const languages: { code: Language; label: string }[] = [
+    { code: 'en', label: t('english') },
+    { code: 'kn', label: t('kannada') },
+    { code: 'hi', label: t('hindi') },
+    { code: 'ta', label: t('tamil') },
+  ];
+
+  const currentLanguageLabel = languages.find(l => l.code === language)?.label || 'English';
+
+  const handleSelectLanguage = (code: Language) => {
+    setLanguage(code);
+    setShowLanguageModal(false);
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('settings')}</Text>
         <View style={{ width: 40 }} />
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
-        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>ACCOUNT</Text>
+        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>{t('account')}</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="plus-circle-outline"
-            label="Add New Valve"
+            label={t('add_valve')}
             onPress={() => router.push('/settings/add-valve')}
           />
           <SettingItem
             icon="person-outline"
-            label="Profile Information"
-            value={user?.name || 'Set Name'}
+            label={t('profile_info')}
+            value={user?.name || t('set_name')}
             onPress={() => router.push('/settings/profile')}
           />
         </View>
         
         {/* System Section */}
-        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>PREFERENCES</Text>
+        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>{t('preferences')}</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="language-outline"
-            label="Language"
-            value="English"
-            onPress={() => {}}
+            label={t('language')}
+            value={currentLanguageLabel}
+            onPress={() => setShowLanguageModal(true)}
           />
         </View>
         
         {/* Support Section */}
-        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>SUPPORT</Text>
+        <Text style={[styles.sectionLabel, { color: COLORS.primary }]}>{t('support')}</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingItem
             icon="help-circle-outline"
-            label="Help Center"
+            label={t('help_center')}
             onPress={() => {}}
             isExternal
           />
           <SettingItem
             icon="document-text-outline"
-            label="Terms of Service"
+            label={t('terms_service')}
             onPress={() => {}}
             color={COLORS.dark}
             isExternal
@@ -100,9 +119,33 @@ export default function SettingsScreen() {
         </View>
         
         <View style={styles.footer}>
-          <Text style={[styles.versionText, { color: colors.textMuted }]}>OrbiPulse v1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textMuted }]}>{t('version')}</Text>
         </View>
       </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal visible={showLanguageModal} transparent animationType="fade" onRequestClose={() => setShowLanguageModal(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowLanguageModal(false)}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('select_language')}</Text>
+            {languages.map((item) => (
+              <TouchableOpacity
+                key={item.code}
+                style={[styles.languageOption, language === item.code && { backgroundColor: COLORS.primary + '22' }]}
+                onPress={() => handleSelectLanguage(item.code)}
+              >
+                <Text style={[styles.languageLabel, { color: colors.text }, language === item.code && { color: COLORS.primary, fontWeight: '700' }]}>
+                  {item.label}
+                </Text>
+                {language === item.code && <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.closeModalBtn} onPress={() => setShowLanguageModal(false)}>
+              <Text style={styles.closeModalText}>{t('cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -185,5 +228,52 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: '800',
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: Radius.md,
+    marginBottom: 4,
+  },
+  languageLabel: {
+    fontSize: FontSize.md,
+    fontWeight: '500',
+  },
+  closeModalBtn: {
+    marginTop: Spacing.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  closeModalText: {
+    fontSize: FontSize.md,
+    color: COLORS.primary,
+    fontWeight: '700',
   },
 });

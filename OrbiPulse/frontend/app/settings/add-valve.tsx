@@ -16,11 +16,13 @@ import { COLORS, Spacing, Radius, FontSize } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
 import { GATEWAYS, Valve } from '../../data/mockData';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AddValveScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { addValve, valves } = useValves();
+  const { t } = useLanguage();
   
   const [deviceId, setDeviceId] = useState('');
   const [name, setName] = useState('');
@@ -34,12 +36,12 @@ export default function AddValveScreen() {
 
   const handleAddValve = async () => {
     if (!deviceId.trim() || !name.trim()) {
-      Alert.alert('Incomplete Data', 'Please provide Device ID and Name');
+      Alert.alert(t('incomplete_data'), t('provide_id_name'));
       return;
     }
 
     if (valves.some(v => v.device_id.toUpperCase() === deviceId.trim().toUpperCase())) {
-      Alert.alert('Duplicate ID', 'A valve with this ID already exists');
+      Alert.alert(t('duplicate_id'), t('valve_exists'));
       return;
     }
 
@@ -63,11 +65,11 @@ export default function AddValveScreen() {
     setIsAdding(true);
     try {
       await addValve(newValve);
-      Alert.alert('Success', 'New valve added successfully!', [
+      Alert.alert(t('success'), t('valve_added_success'), [
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add valve');
+      Alert.alert(t('error'), t('failed_add_valve'));
     } finally {
       setIsAdding(false);
     }
@@ -79,7 +81,7 @@ export default function AddValveScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Add New Valve</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('add_valve')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -88,12 +90,12 @@ export default function AddValveScreen() {
           <View style={[styles.iconCircle, { backgroundColor: COLORS.primary + '20' }]}>
             <Ionicons name="add-circle" size={50} color={COLORS.primary} />
           </View>
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}> Register a new hardware valve to your network </Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}> {t('register_valve_msg')} </Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Device ID</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('device_id')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Ionicons name="barcode-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
               <TextInput
@@ -108,7 +110,7 @@ export default function AddValveScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valve Name</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('valve_name')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Ionicons name="pricetag-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
               <TextInput
@@ -122,7 +124,7 @@ export default function AddValveScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Gateway Cluster</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('gateway_cluster')}</Text>
             <View style={styles.gatewayOptions}>
               {GATEWAYS.map(gw => (
                 <TouchableOpacity
@@ -142,7 +144,7 @@ export default function AddValveScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Zone / Field</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('zone_field')}</Text>
             <View style={styles.zoneOptions}>
               {['Zone A', 'Zone B', 'Zone C', 'Zone D', 'Zone E'].map(z => (
                 <TouchableOpacity
@@ -171,7 +173,7 @@ export default function AddValveScreen() {
           ) : (
             <>
               <Ionicons name="save-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.addBtnText}>Save and Deploy</Text>
+              <Text style={styles.addBtnText}>{t('save_and_deploy')}</Text>
             </>
           )}
         </TouchableOpacity>

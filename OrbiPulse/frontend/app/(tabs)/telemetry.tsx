@@ -24,6 +24,7 @@ import {
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
+import { useLanguage } from '../../context/LanguageContext';
 import MetricCard from '../../components/MetricCard';
 import StatusBadge from '../../components/StatusBadge';
 import Sparkline from '../../components/Sparkline';
@@ -37,6 +38,7 @@ interface ValveTelemetry {
 
 export default function TelemetryScreen() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { valves, openCount, faultCount, offlineCount } = useValves();
   const [selected, setSelected] = useState<string>(valves[0]?.device_id || '');
   const [telemetryData, setTelemetryData] = useState<Record<string, ValveTelemetry>>({});
@@ -87,7 +89,7 @@ export default function TelemetryScreen() {
       ]).start();
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [valves]);
 
   const activeValve = valves.find((v) => v.device_id === selected);
   const activeTd   = telemetryData[selected];
@@ -103,9 +105,9 @@ export default function TelemetryScreen() {
         {/* Summary metrics */}
         <View style={styles.section}>
           <View style={styles.metricsRow}>
-            <MetricCard label="Online" value={onlineCount} unit={`/ ${valves.length}`} color={Colors.accent} icon="🟢" />
-            <MetricCard label="Faults"  value={faultCount}   color={faultCount > 0 ? Colors.red : Colors.textPrimary} icon="⚠️" warning={faultCount > 0} />
-            <MetricCard label="Offline" value={offlineCount} color={offlineCount > 0 ? Colors.offlineGray : Colors.textPrimary} icon="📡" />
+            <MetricCard label={t('online')} value={onlineCount} unit={`/ ${valves.length}`} color={Colors.accent} icon="🟢" />
+            <MetricCard label={t('faults')}  value={faultCount}   color={faultCount > 0 ? Colors.red : Colors.textPrimary} icon="⚠️" warning={faultCount > 0} />
+            <MetricCard label={t('offline')} value={offlineCount} color={offlineCount > 0 ? Colors.offlineGray : Colors.textPrimary} icon="📡" />
           </View>
         </View>
 
@@ -114,13 +116,13 @@ export default function TelemetryScreen() {
           <View style={styles.alertBanner}>
             <Ionicons name="warning" size={16} color={Colors.red} />
             <Text style={styles.alertText}>
-              {faultCount} valve{faultCount > 1 ? 's' : ''} in fault state — immediate attention required
+              {faultCount} {faultCount > 1 ? t('fault_alert_plural') : t('fault_alert_singular')}
             </Text>
           </View>
         )}
 
         {/* Device selector */}
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Device Telemetry</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('device_telemetry')}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -164,14 +166,14 @@ export default function TelemetryScreen() {
             {/* Key metrics */}
             <View style={styles.metricsRow}>
               <MetricCard
-                label="Battery"
+                label={t('battery')}
                 value={activeValve.battery_voltage.toFixed(2)}
                 unit="V"
                 color={getBatteryColor(activeValve.battery_voltage)}
                 warning={activeValve.battery_voltage < 3.3}
               />
               <MetricCard
-                label="Current"
+                label={t('current')}
                 value={activeValve.motor_current.toFixed(2)}
                 unit="A"
                 color={activeValve.motor_current > 2 ? Colors.red : Colors.textPrimary}
@@ -180,14 +182,14 @@ export default function TelemetryScreen() {
             </View>
             <View style={[styles.metricsRow, { marginTop: Spacing.sm }]}>
               <MetricCard
-                label="Temperature"
+                label={t('temperature')}
                 value={activeValve.internal_temp}
                 unit="°C"
                 color={activeValve.internal_temp > 45 ? Colors.red : activeValve.internal_temp > 40 ? Colors.orange : Colors.textPrimary}
                 warning={activeValve.internal_temp > 45}
               />
               <MetricCard
-                label="Signal"
+                label={t('signal')}
                 value={activeValve.signal_strength}
                 unit="dBm"
                 color={activeValve.signal_strength > -70 ? Colors.accent : activeValve.signal_strength > -80 ? Colors.orange : Colors.red}
@@ -198,41 +200,44 @@ export default function TelemetryScreen() {
             {/* Sparklines */}
             <View style={styles.sparkSection}>
               <SparkRow
-                label="Motor Current (A)"
+                label={t('motor_current')}
                 history={activeTd.currentHistory}
                 color={Colors.orange}
                 threshold={2.0}
+                t={t}
               />
               <SparkRow
-                label="Battery Voltage (V)"
+                label={t('battery_voltage')}
                 history={activeTd.batteryHistory}
                 color={Colors.accent}
                 threshold={3.3}
                 thresholdDir="below"
+                t={t}
               />
               <SparkRow
-                label="Internal Temp (°C)"
+                label={t('internal_temp')}
                 history={activeTd.tempHistory}
                 color={Colors.blue}
                 threshold={45}
+                t={t}
               />
             </View>
 
             <View style={styles.lastSeenRow}>
               <Ionicons name="time-outline" size={12} color={Colors.textMuted} />
-              <Text style={styles.lastSeenText}>Last seen: {formatLastSeen(activeValve.last_seen)}</Text>
-              <Text style={styles.moveTime}>Move time: {activeValve.movement_duration}ms</Text>
+              <Text style={styles.lastSeenText}>{t('last_seen')}: {formatLastSeen(activeValve.last_seen)}</Text>
+              <Text style={styles.moveTime}>{t('move_time')}: {activeValve.movement_duration}ms</Text>
             </View>
           </View>
         ) : (
           <View style={[styles.detailBlock, { alignItems: 'center', paddingVertical: 40 }]}>
             <ActivityIndicator color={COLORS.primary} />
-            <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading telemetry detail...</Text>
+            <Text style={{ marginTop: 12, color: colors.textSecondary }}>{t('loading')}</Text>
           </View>
         )}
 
         {/* All devices health summary */}
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>All Devices — Health Overview</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('health_overview')}</Text>
         <View style={[styles.healthTable, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.tableHeader, { backgroundColor: colors.surfaceHigh, borderBottomColor: colors.border }]}>
             {['Device', 'Bat', 'Cur', 'Tmp', 'Sig', 'Status'].map((h) => (
@@ -278,12 +283,14 @@ function SparkRow({
   color,
   threshold,
   thresholdDir = 'above',
+  t,
 }: {
   label: string;
   history: TelemetryPoint[];
   color: string;
   threshold: number;
   thresholdDir?: 'above' | 'below';
+  t: any;
 }) {
   const latest = history[history.length - 1]?.value ?? 0;
   const isWarning = thresholdDir === 'above' ? latest > threshold : latest < threshold;
@@ -293,7 +300,7 @@ function SparkRow({
         <Text style={sparkStyles.label}>{label}</Text>
         <Text style={[sparkStyles.value, isWarning && { color: Colors.red }]}>
           {latest.toFixed(2)}
-          {isWarning && <Text style={sparkStyles.warn}>  ▲ Alert</Text>}
+          {isWarning && <Text style={sparkStyles.warn}>  ▲ {t('alert')}</Text>}
         </Text>
       </View>
       <Sparkline data={history} color={isWarning ? Colors.red : color} width={140} height={44} />

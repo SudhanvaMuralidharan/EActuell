@@ -131,6 +131,23 @@ export const TRANSLATIONS = {
     control_flow: 'Control Flow',
     adjust_flow: 'Adjust Flow Rate',
     set: 'Set',
+    position: 'Position',
+    valves: 'Valves',
+    uptime: 'Uptime',
+
+    // Add Valve Screen
+    register_valve_msg: 'Register a new hardware valve to your network',
+    valve_name: 'Valve Name',
+    gateway_cluster: 'Gateway Cluster',
+    zone_field: 'Zone / Field',
+    save_and_deploy: 'Save and Deploy',
+    incomplete_data: 'Incomplete Data',
+    provide_id_name: 'Please provide Device ID and Name',
+    duplicate_id: 'Duplicate ID',
+    valve_exists: 'A valve with this ID already exists',
+    valve_added_success: 'New valve added successfully!',
+    failed_add_valve: 'Failed to add valve',
+    device_id: 'Device ID',
   },
   kn: {
     // Shared / Common
@@ -262,6 +279,23 @@ export const TRANSLATIONS = {
     control_flow: 'ಹರಿವಿನ ನಿಯಂತ್ರಣ',
     adjust_flow: 'ಹರಿವಿನ ಪ್ರಮಾಣ ಹೊಂದಿಸಿ',
     set: 'ಸೆಟ್',
+    position: 'ಸ್ಥಾನ',
+    valves: 'ವಾಲ್ವ್‌ಗಳು',
+    uptime: 'ಅಪ್‌ಟೈಮ್',
+
+    // Add Valve Screen
+    register_valve_msg: 'ನಿಮ್ಮ ನೆಟ್‌ವರ್ಕ್‌ಗೆ ಹೊಸ ಹಾರ್ಡ್‌ವೇರ್ ವಾಲ್ವ್ ಅನ್ನು ನೋಂದಾಯಿಸಿ',
+    valve_name: 'ವಾಲ್ವ್ ಹೆಸರು',
+    gateway_cluster: 'ಗೇಟ್ವೇ ಕ್ಲಸ್ಟರ್',
+    zone_field: 'ವಲಯ / ಕ್ಷೇತ್ರ',
+    save_and_deploy: 'ಉಳಿಸಿ ಮತ್ತು ನಿಯೋಜಿಸಿ',
+    incomplete_data: 'ಅಪೂರ್ಣ ಮಾಹಿತಿ',
+    provide_id_name: 'ದಯವಿಟ್ಟು ಸಾಧನ ಐಡಿ ಮತ್ತು ಹೆಸರನ್ನು ಒದಗಿಸಿ',
+    duplicate_id: 'ನಕಲಿ ಐಡಿ',
+    valve_exists: 'ಈ ಐಡಿಯೊಂದಿಗೆ ವಾಲ್ವ್ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ',
+    valve_added_success: 'ಹೊಸ ವಾಲ್ವ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ!',
+    failed_add_valve: 'ವಾಲ್ವ್ ಸೇರಿಸಲು ವಿಫಲವಾಗಿದೆ',
+    device_id: 'ಸಾಧನ ಐಡಿ',
   },
   hi: {
     // Shared / Common
@@ -393,6 +427,23 @@ export const TRANSLATIONS = {
     control_flow: 'प्रवाह नियंत्रण',
     adjust_flow: 'प्रवाह दर समायोजित करें',
     set: 'सेट करें',
+    position: 'स्थिति',
+    valves: 'वाल्व',
+    uptime: 'अपटाइम',
+
+    // Add Valve Screen
+    register_valve_msg: 'अपने नेटवर्क में एक नया हार्डवेयर वाल्व पंजीकृत करें',
+    valve_name: 'वाल्व का नाम',
+    gateway_cluster: 'गेटवे क्लस्टर',
+    zone_field: 'जोन / फील्ड',
+    save_and_deploy: 'सहेजें और तैनात करें',
+    incomplete_data: 'अधूरा डेटा',
+    provide_id_name: 'कृपया डिवाइस आईडी और नाम प्रदान करें',
+    duplicate_id: 'डुप्लिकेट आईडी',
+    valve_exists: 'इस आईडी वाला वाल्व पहले से मौजूद है',
+    valve_added_success: 'नया वाल्व सफलतापूर्वक जोड़ा गया!',
+    failed_add_valve: 'वाल्व जोड़ने में विफल',
+    device_id: 'डिवाइस आईडी',
   },
   ta: {
     // Shared / Common
@@ -524,5 +575,22 @@ export const TRANSLATIONS = {
     control_flow: 'ஓட்டக் கட்டுப்பாடு',
     adjust_flow: 'ஓட்ட விகிதத்தை சரிசெய்யவும்',
     set: 'அமை',
+    position: 'நிலை',
+    valves: 'வால்வுகள்',
+    uptime: 'நேரம்',
+
+    // Add Valve Screen
+    register_valve_msg: 'உங்கள் பிணையத்தில் புதிய வன்பொருள் வால்வைப் பதிவு செய்யவும்',
+    valve_name: 'வால்வு பெயர்',
+    gateway_cluster: 'கேட்வே கிளஸ்டர்',
+    zone_field: 'மண்டலம் / புலம்',
+    save_and_deploy: 'சேமித்து வரிசைப்படுத்தவும்',
+    incomplete_data: 'முழுமையற்ற தரவு',
+    provide_id_name: 'சாதன ஐடி மற்றும் பெயரை வழங்கவும்',
+    duplicate_id: 'நகல் ஐடி',
+    valve_exists: 'இந்த ஐடியைக் கொண்ட வால்வு ஏற்கனவே உள்ளது',
+    valve_added_success: 'புதிய வால்வு வெற்றிகரமாக சேர்க்கப்பட்டது!',
+    failed_add_valve: 'வால்வைச் சேர்ப்பதில் தோல்வி',
+    device_id: 'சாதன ஐடி',
   },
 };

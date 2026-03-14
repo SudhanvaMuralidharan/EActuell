@@ -20,6 +20,7 @@ import {
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
+import { useLanguage } from '../../context/LanguageContext';
 import StatusBadge from '../../components/StatusBadge';
 import ValveGauge from '../../components/ValveGauge';
 
@@ -33,6 +34,7 @@ interface LocalValveState {
 
 export default function ControlScreen() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { valves, states, cmdLog, openValve, closeValve, setValvePosition } = useValves();
 
   const [selectedId, setSelectedId] = useState<string>(valves[0]?.device_id || '');
@@ -50,13 +52,13 @@ export default function ControlScreen() {
   const handleClose = () => { closeValve(selectedId); setSliderVal(0); };
   const handleSet   = () => setValvePosition(selectedId, sliderVal);
 
-  const isControllable = activeState.status !== 'offline' && activeState.status !== 'fault';
+  const isControllable = activeState?.status !== 'offline' && activeState?.status !== 'fault';
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Device select */}
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SELECT VALVE</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('select_valve')}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -65,8 +67,8 @@ export default function ControlScreen() {
           {valves.map((v) => {
             const s = states[v.device_id];
             const active = v.device_id === selectedId;
-            const color = getStatusColor(s.status);
-            const blocked = s.status === 'offline' || s.status === 'fault';
+            const color = getStatusColor(s?.status || 'unknown');
+            const blocked = s?.status === 'offline' || s?.status === 'fault';
             return (
               <TouchableOpacity
                 key={v.device_id}
@@ -80,7 +82,7 @@ export default function ControlScreen() {
               >
                 <View style={[styles.pickerDot, { backgroundColor: color }]} />
                 <Text style={[styles.pickerId, active && { color }]}>{v.device_id}</Text>
-                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={{ marginTop: 2 }} />}
+                {s?.pending && <ActivityIndicator size={8} color={COLORS.primary} style={{ marginTop: 2 }} />}
               </TouchableOpacity>
             );
           })}
@@ -101,19 +103,19 @@ export default function ControlScreen() {
             <View style={styles.gaugeRow}>
               <ValveGauge position={activeState.position} status={activeState.status} size={110} />
               <View style={styles.gaugeInfo}>
-                <Text style={styles.gaugeLabel}>Current Position</Text>
+                <Text style={styles.gaugeLabel}>{t('current_position')}</Text>
                 <Text style={[styles.gaugeValue, { color: getStatusColor(activeState.status) }]}>
                   {activeState.position}%
                 </Text>
                 {activeState.pending && (
                   <View style={styles.pendingRow}>
                     <ActivityIndicator size="small" color={COLORS.primary} />
-                    <Text style={styles.pendingText}>Sending command…</Text>
+                    <Text style={styles.pendingText}>{t('sending_command')}</Text>
                   </View>
                 )}
                 {activeState.lastCmd && !activeState.pending && (
                   <Text style={styles.lastCmdText}>
-                    Last: {activeState.lastCmd}{'\n'}at {activeState.lastCmdTime}
+                    {t('last_command')}: {activeState.lastCmd}{'\n'}{t('at')} {activeState.lastCmdTime}
                   </Text>
                 )}
               </View>
@@ -124,7 +126,7 @@ export default function ControlScreen() {
               <View style={styles.blockedBanner}>
                 <Ionicons name="ban" size={16} color={COLORS.danger} />
                 <Text style={styles.blockedText}>
-                  Control disabled — valve is {activeState.status}
+                  {t('control_disabled_prefix')} {t(`status_${activeState.status}` as any)}
                 </Text>
               </View>
             )}
@@ -141,7 +143,7 @@ export default function ControlScreen() {
                 disabled={!isControllable || activeState.pending}
               >
                 <Ionicons name="water" size={20} color={Colors.bg} />
-                <Text style={styles.ctrlBtnText}>OPEN</Text>
+                <Text style={styles.ctrlBtnText}>{t('open')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -153,14 +155,14 @@ export default function ControlScreen() {
                 disabled={!isControllable || activeState.pending}
               >
                 <Ionicons name="close-circle" size={20} color={Colors.bg} />
-                <Text style={styles.ctrlBtnText}>CLOSE</Text>
+                <Text style={styles.ctrlBtnText}>{t('close')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Position slider */}
             <View style={styles.sliderSection}>
               <View style={styles.sliderLabelRow}>
-                <Text style={styles.sliderLabel}>Set Position</Text>
+                <Text style={styles.sliderLabel}>{t('set_position')}</Text>
                 <Text style={styles.sliderValue}>{Math.round(sliderVal)}%</Text>
               </View>
               <Slider
@@ -188,23 +190,23 @@ export default function ControlScreen() {
                 onPress={handleSet}
                 disabled={!isControllable || activeState.pending}
               >
-                <Text style={styles.setBtnText}>Apply Position — {Math.round(sliderVal)}%</Text>
+                <Text style={styles.setBtnText}>{t('apply_position')} — {Math.round(sliderVal)}%</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           <View style={[styles.panel, { alignItems: 'center', paddingVertical: 40 }]}>
             <ActivityIndicator color={COLORS.primary} />
-            <Text style={{ marginTop: 12, color: colors.textSecondary }}>Loading valve control...</Text>
+            <Text style={{ marginTop: 12, color: colors.textSecondary }}>{t('loading_control')}</Text>
           </View>
         )}
 
         {/* Quick status grid */}
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ALL VALVES — QUICK STATUS</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('all_valves_quick')}</Text>
         <View style={styles.statusGrid}>
           {valves.map((v) => {
             const s = states[v.device_id];
-            const color = getStatusColor(s.status);
+            const color = getStatusColor(s?.status || 'unknown');
             return (
               <TouchableOpacity
                 key={v.device_id}
@@ -212,9 +214,9 @@ export default function ControlScreen() {
                 onPress={() => selectValve(v)}
               >
                 <Text style={styles.statusCardId}>{v.device_id}</Text>
-                <Text style={[styles.statusCardPos, { color }]}>{s.position}%</Text>
+                <Text style={[styles.statusCardPos, { color }]}>{s?.position ?? 0}%</Text>
                 <View style={[styles.statusCardDot, { backgroundColor: color }]} />
-                {s.pending && <ActivityIndicator size={8} color={COLORS.primary} style={styles.statusPending} />}
+                {s?.pending && <ActivityIndicator size={8} color={COLORS.primary} style={styles.statusPending} />}
               </TouchableOpacity>
             );
           })}
@@ -223,7 +225,7 @@ export default function ControlScreen() {
         {/* Command log */}
         {cmdLog.length > 0 && (
           <>
-            <Text style={styles.sectionLabel}>COMMAND LOG</Text>
+            <Text style={styles.sectionLabel}>{t('command_log')}</Text>
             <View style={styles.logBox}>
               {cmdLog.map((entry, i) => (
                 <Text key={i} style={[styles.logEntry, entry.includes('ACK') && styles.logAck, entry.includes('NACK') && styles.logNack]}>

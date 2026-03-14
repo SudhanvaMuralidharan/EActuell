@@ -21,11 +21,13 @@ import {
 import { Colors, Spacing, Radius, FontSize, COLORS } from '../../constants/theme';
 import { useTheme } from '../../context/ThemeContext';
 import { useValves } from '../../context/ValveContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 let nextId = 10;
 
 export default function SchedulerScreen() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { valves } = useValves();
   const [schedules, setSchedules] = useState<IrrigationSchedule[]>(INITIAL_SCHEDULES);
   const [showModal, setShowModal] = useState(false);
@@ -57,16 +59,16 @@ export default function SchedulerScreen() {
 
   const saveSchedule = () => {
     if (!formStartTime.match(/^\d{2}:\d{2}$/)) {
-      Alert.alert('Invalid time', 'Please enter time as HH:MM (e.g. 06:30)');
+      Alert.alert(t('invalid_time'), t('invalid_time_msg'));
       return;
     }
     const dur = parseInt(formDuration, 10);
     if (isNaN(dur) || dur < 1 || dur > 240) {
-      Alert.alert('Invalid duration', 'Duration must be 1–240 minutes');
+      Alert.alert(t('invalid_duration'), t('invalid_duration_msg'));
       return;
     }
     if (formDays.length === 0) {
-      Alert.alert('No days selected', 'Please select at least one day');
+      Alert.alert(t('no_days'), t('no_days_msg'));
       return;
     }
     const valve = valves.find((v) => v.device_id === formValveId)!;
@@ -96,9 +98,9 @@ export default function SchedulerScreen() {
   };
 
   const deleteSchedule = (id: string) => {
-    Alert.alert('Delete Schedule', 'Are you sure you want to delete this schedule?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => setSchedules((prev) => prev.filter((s) => s.id !== id)) },
+    Alert.alert(t('delete_schedule'), t('delete_confirm'), [
+      { text: t('cancel'), style: 'cancel' },
+      { text: t('delete'), style: 'destructive', onPress: () => setSchedules((prev) => prev.filter((s) => s.id !== id)) },
     ]);
   };
 
@@ -129,7 +131,7 @@ export default function SchedulerScreen() {
         <View style={styles.actionHeader}>
           <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
             <Ionicons name="add" size={20} color={COLORS.white} />
-            <Text style={styles.addBtnText}>New Schedule</Text>
+            <Text style={styles.addBtnText}>{t('new_schedule')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -137,41 +139,39 @@ export default function SchedulerScreen() {
         <View style={styles.summaryRow}>
           <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: colors.text }]}>{schedules.length}</Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{t('total')}</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{activeSchedules.length}</Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Active</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{t('active')}</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.secondary }]}>{todaySchedules.length}</Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Today</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{t('today')}</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryValue, { color: COLORS.warning }]}>{Math.round(totalMinutesDay)}m</Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Avg/Day</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{t('avg_day')}</Text>
           </View>
         </View>
 
         {/* Today's schedule */}
         {todaySchedules.length > 0 && (
           <>
-            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>TODAY — {todayAbbr.toUpperCase()}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t('today')} — {todayAbbr.toUpperCase()}</Text>
             {todaySchedules
               .sort((a, b) => a.start_time.localeCompare(b.start_time))
               .map((s) => (
                 <TodayCard key={s.id} schedule={s} onEdit={() => openEdit(s)} />
               ))}
           </>
-        )}
-
-        {/* All schedules */}
-        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ALL SCHEDULES</Text>
+        )}        {/* All schedules */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t('all_schedules')}</Text>
         {schedules.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>🌱</Text>
-            <Text style={styles.emptyTitle}>No schedules yet</Text>
-            <Text style={styles.emptyText}>Tap "New Schedule" to automate your irrigation</Text>
+            <Text style={styles.emptyTitle}>{t('no_schedules')}</Text>
+            <Text style={styles.emptyText}>{t('tap_to_automate')}</Text>
           </View>
         ) : (
           schedules.map((s) => (
@@ -192,7 +192,7 @@ export default function SchedulerScreen() {
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.modalSafe} edges={['top', 'bottom']}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{editTarget ? 'Edit Schedule' : 'New Schedule'}</Text>
+            <Text style={styles.modalTitle}>{editTarget ? t('edit_schedule') : t('new_schedule')}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)}>
               <Ionicons name="close" size={24} color={COLORS.dark} />
             </TouchableOpacity>
@@ -200,7 +200,7 @@ export default function SchedulerScreen() {
 
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             {/* Valve selection */}
-            <Text style={styles.fieldLabel}>Valve</Text>
+            <Text style={styles.fieldLabel}>{t('valve')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.valveScroll}>
               {valves.filter((v) => v.status !== 'offline').map((v) => (
                 <TouchableOpacity
@@ -220,7 +220,7 @@ export default function SchedulerScreen() {
             </ScrollView>
 
             {/* Start time */}
-            <Text style={styles.fieldLabel}>Start Time (HH:MM)</Text>
+            <Text style={styles.fieldLabel}>{t('start_time')}</Text>
             <TextInput
               style={styles.textInput}
               value={formStartTime}
@@ -231,7 +231,7 @@ export default function SchedulerScreen() {
             />
 
             {/* Duration */}
-            <Text style={styles.fieldLabel}>Duration (minutes)</Text>
+            <Text style={styles.fieldLabel}>{t('duration_min')}</Text>
             <TextInput
               style={styles.textInput}
               value={formDuration}
@@ -242,7 +242,7 @@ export default function SchedulerScreen() {
             />
 
             {/* Days */}
-            <Text style={styles.fieldLabel}>Days</Text>
+            <Text style={styles.fieldLabel}>{t('days')}</Text>
             <View style={styles.daysRow}>
               {DAYS_OF_WEEK.map((day) => {
                 const active = formDays.includes(day);
@@ -259,13 +259,13 @@ export default function SchedulerScreen() {
             </View>
 
             {/* Quick presets */}
-            <Text style={styles.fieldLabel}>Quick Presets</Text>
+            <Text style={styles.fieldLabel}>{t('quick_presets')}</Text>
             <View style={styles.presetsRow}>
               {[
-                { label: 'Every day', days: DAYS_OF_WEEK },
-                { label: 'Weekdays', days: ['Mon','Tue','Wed','Thu','Fri'] },
-                { label: 'Weekends', days: ['Sat','Sun'] },
-                { label: 'Alt. days', days: ['Mon','Wed','Fri'] },
+                { label: t('every_day'), days: DAYS_OF_WEEK },
+                { label: t('weekdays'), days: ['Mon','Tue','Wed','Thu','Fri'] },
+                { label: t('weekends'), days: ['Sat','Sun'] },
+                { label: t('alt_days'), days: ['Mon','Wed','Fri'] },
               ].map(({ label, days }) => (
                 <TouchableOpacity
                   key={label}
@@ -279,18 +279,19 @@ export default function SchedulerScreen() {
 
             {/* Preview */}
             <View style={styles.previewBox}>
-              <Text style={styles.previewLabel}>Schedule Preview</Text>
+              <Text style={styles.previewLabel}>{t('schedule_preview')}</Text>
               <Text style={styles.previewText}>
-                {valves.find((v) => v.device_id === formValveId)?.name} will open at{' '}
-                <Text style={{ color: Colors.accent }}>{formStartTime}</Text> for{' '}
-                <Text style={{ color: Colors.accent }}>{formDuration} min</Text> on{' '}
-                <Text style={{ color: Colors.accent }}>{formDays.join(', ') || '—'}</Text>
+                {t('preview_message')
+                  .replace('{name}', valves.find((v) => v.device_id === formValveId)?.name || '')
+                  .replace('{time}', formStartTime)
+                  .replace('{dur}', formDuration)
+                  .replace('{days}', formDays.join(', ') || '—')}
               </Text>
             </View>
 
             <TouchableOpacity style={styles.saveBtn} onPress={saveSchedule}>
               <Ionicons name="checkmark" size={20} color={Colors.bg} />
-              <Text style={styles.saveBtnText}>{editTarget ? 'Update Schedule' : 'Create Schedule'}</Text>
+              <Text style={styles.saveBtnText}>{editTarget ? t('update_schedule') : t('create_schedule')}</Text>
             </TouchableOpacity>
 
             <View style={{ height: Spacing.xl }} />
@@ -304,6 +305,7 @@ export default function SchedulerScreen() {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function TodayCard({ schedule, onEdit }: { schedule: IrrigationSchedule; onEdit: () => void }) {
+  const { t } = useLanguage();
   const [hh, mm] = schedule.start_time.split(':').map(Number);
   const endMin = hh * 60 + mm + schedule.duration_minutes;
   const endH = Math.floor(endMin / 60) % 24;
@@ -319,7 +321,7 @@ function TodayCard({ schedule, onEdit }: { schedule: IrrigationSchedule; onEdit:
       </View>
       <View style={styles.todayInfo}>
         <Text style={styles.todayValve}>{schedule.valve_name}</Text>
-        <Text style={styles.todayDuration}>{schedule.duration_minutes} min</Text>
+        <Text style={styles.todayDuration}>{schedule.duration_minutes} {t('min')}</Text>
       </View>
       <View style={styles.todayDot} />
     </TouchableOpacity>
@@ -337,6 +339,7 @@ function ScheduleCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <View style={[styles.scheduleCard, !schedule.enabled && styles.scheduleCardDisabled]}>
       <View style={styles.scheduleMain}>
@@ -358,7 +361,7 @@ function ScheduleCard({
           </View>
           <View style={styles.scheduleDetailItem}>
             <Ionicons name="hourglass-outline" size={13} color={Colors.textMuted} />
-            <Text style={styles.scheduleDetailText}>{schedule.duration_minutes} min</Text>
+            <Text style={styles.scheduleDetailText}>{schedule.duration_minutes} {t('min')}</Text>
           </View>
         </View>
         <View style={styles.daysChips}>
