@@ -11,7 +11,7 @@ from datetime import datetime
 from ai_agent.telemetry_analyzer import analyze, TelemetryContext
 from ai_agent.anomaly_detector import detect, AnomalyReport
 from ai_agent.decision_engine import decide, ValveDecision
-from services.telemetry_service import get_telemetry, get_all_valve_summaries
+from services.telemetry_service import get_telemetry
 from models.telemetry_model import TelemetryRecord
 
 
@@ -73,9 +73,9 @@ def _serialise_decision(decision: ValveDecision, report: AnomalyReport, ctx: Tel
 # Public API
 # ---------------------------------------------------------------------------
 
-def get_insights_for_valve(valve_id: str, limit: int = 50) -> Dict[str, Any]:
+async def get_insights_for_valve(db: AsyncSession, valve_id: str, limit: int = 50) -> Dict[str, Any]:
     """Run the full AI pipeline for a single valve."""
-    records: List[TelemetryRecord] = get_telemetry(valve_id=valve_id, limit=limit)
+    records: List[TelemetryRecord] = await get_telemetry(db, valve_id=valve_id, limit=limit)
     if not records:
         return {
             "valve_id": valve_id,
@@ -95,17 +95,21 @@ def get_insights_for_valve(valve_id: str, limit: int = 50) -> Dict[str, Any]:
     return _serialise_decision(decision, report, ctx)
 
 
-def get_insights_all_valves() -> List[Dict[str, Any]]:
+async def get_insights_all_valves(db: AsyncSession) -> List[Dict[str, Any]]:
     """Run the full AI pipeline for every valve that has telemetry data."""
-    summaries = get_all_valve_summaries()
+    # Note: Using get_all_valve_summaries which might also need to be async or refactored
+    # For now, let's assume we can list valves from valve_service
+    from services.valve_service import list_valves_for_plot
+    valves = await list_valves_for_plot(db)
+    
     results = []
-    for summary in summaries:
+    for valve in valves:
         try:
-            insight = get_insights_for_valve(summary.valve_id)
+            insight = await get_insights_for_valve(db, valve.id)
             results.append(insight)
         except Exception as exc:
             results.append({
-                "valve_id": summary.valve_id,
+                "valve_id": valve.id,
                 "error": str(exc),
             })
     # Sort: most critical first

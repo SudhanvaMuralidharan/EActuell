@@ -1,0 +1,27 @@
+=== SCHEMA: telemetry (1 tables) ===
+
+TABLE: telemetry.device_telemetry
+  id                             integer                        nullable=NO
+  device_id                      character varying              nullable=YES
+  position                       integer                        nullable=YES
+  motor_current                  double precision               nullable=YES
+  temperature                    double precision               nullable=YES
+  battery_voltage                double precision               nullable=YES
+  flow_rate                      double precision               nullable=YES
+  timestamp                      timestamp without time zone    nullable=YES
+  pressure                       double precision               nullable=YES
+=== SCHEMA: network (1 tables) ===
+
+TABLE: network.valves
+  id                             integer                        nullable=NO
+  device_id                      character varying              nullable=NO
+  gateway_id                     character varying              nullable=YES
+  zone                           character varying              nullable=YES
+  latitude                       double precision               nullable=YES
+  longitude                      double precision               nullable=YES
+  valve_position                 integer                        nullable=YES
+  battery_voltage                double precision               nullable=YES
+  motor_current                  double precision               nullable=YES
+  temperature                    double precision               nullable=YES
+  signal_strength                integer                        nullable=YES
+  status                         character varying              nullable=YES

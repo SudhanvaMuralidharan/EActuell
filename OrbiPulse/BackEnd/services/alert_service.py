@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.settings import get_settings
 from models.alert_model import Alert, AlertSeverity, AlertType
@@ -119,17 +120,17 @@ def evaluate_telemetry(record: TelemetryRecord, plot_id: Optional[str] = None) -
     return new_alerts
 
 
-def run_full_evaluation() -> List[Alert]:
+async def run_full_evaluation(db: AsyncSession) -> List[Alert]:
     """Evaluate all telemetry records and seed alerts."""
     from services.telemetry_service import get_telemetry
     from services.valve_service import get_valve
 
     all_alerts: List[Alert] = []
-    records = get_telemetry(limit=200)
+    records = await get_telemetry(db, limit=200)
     for record in records:
         try:
-            valve = get_valve(record.valve_id)
-            plot_id = valve.plot_id
+            valve = await get_valve(db, record.valve_id)
+            plot_id = valve.zone  # use zone as the grouping field
         except Exception:
             plot_id = None
         alerts = evaluate_telemetry(record, plot_id=plot_id)

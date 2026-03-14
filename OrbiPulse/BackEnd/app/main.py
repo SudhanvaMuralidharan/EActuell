@@ -81,10 +81,30 @@ app.include_router(api_router)
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------
+from ai_agent.autonomous_agent import agent as auto_agent
+
 @app.on_event("startup")
-def on_startup():
-    """Pre-populate alerts from dataset on startup."""
-    run_full_evaluation()
+async def on_startup():
+    """Pre-populate alerts and start AI agent on startup."""
+    import logging
+    logger = logging.getLogger("startup")
+
+    # 1. Seed alerts (non-fatal if DB schema is incomplete)
+    try:
+        from config.database import SessionLocal
+        async with SessionLocal() as db:
+            await run_full_evaluation(db)
+        print("✅ Alert evaluation complete")
+    except Exception as e:
+        logger.warning(f"⚠️  Alert evaluation skipped (DB issue): {e}")
+
+    # 2. Start Autonomous AI Agent (non-fatal)
+    try:
+        await auto_agent.start()
+        print("🤖 Autonomous AI Agent is ACTIVE")
+    except Exception as e:
+        logger.warning(f"⚠️  AI Agent start skipped: {e}")
+
     print(f"✅ {settings.APP_NAME} v{settings.APP_VERSION} started")
     print("📖 Swagger docs → http://localhost:8000/docs")
 

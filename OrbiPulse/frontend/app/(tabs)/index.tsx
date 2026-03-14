@@ -109,8 +109,7 @@ export default function MapScreen() {
               onPress={() => setFilter(s)}>
               <Ionicons name={icon as any} size={14} color={active ? color : colors.textMuted} style={{ marginRight: 6 }} />
               <Text style={[styles.filterText, { color: colors.textSecondary }, active && { color }]}>
-                {getStatusLabel(s)}{' '}
-                <Text style={styles.filterCount}>({statusCounts[s]})</Text>
+                {getStatusLabel(s)} <Text style={styles.filterCount}>({statusCounts[s]})</Text>
               </Text>
             </TouchableOpacity>
           );

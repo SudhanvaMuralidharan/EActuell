@@ -8,7 +8,13 @@ db_url = settings.DATABASE_URL
 if db_url.startswith("postgresql://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-engine = create_async_engine(db_url, echo=settings.DEBUG)
+engine = create_async_engine(
+    db_url, 
+    echo=settings.DEBUG,
+    connect_args={
+        "statement_cache_size": 0,
+    }
+)
 SessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,

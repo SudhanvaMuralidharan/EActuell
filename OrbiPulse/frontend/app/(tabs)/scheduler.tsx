@@ -156,7 +156,7 @@ export default function SchedulerScreen() {
         </View>
 
         {/* Today's schedule */}
-        {todaySchedules.length > 0 && (
+        {todaySchedules.length > 0 ? (
           <>
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t('today')} — {todayAbbr.toUpperCase()}</Text>
             {todaySchedules
@@ -165,7 +165,8 @@ export default function SchedulerScreen() {
                 <TodayCard key={s.id} schedule={s} onEdit={() => openEdit(s)} />
               ))}
           </>
-        )}        {/* All schedules */}
+        ) : null}
+        {/* All schedules */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t('all_schedules')}</Text>
         {schedules.length === 0 ? (
           <View style={styles.emptyState}>

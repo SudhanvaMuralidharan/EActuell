@@ -4,7 +4,7 @@
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:8000/api',
   TIMEOUT: 10000,
-  USE_MOCK_API: false, // Set to false when backend is ready
+  USE_MOCK_API: true, // Backend doesn't have OTP endpoints, use mock auth
 };
 
 export const AUTH_ENDPOINTS = {

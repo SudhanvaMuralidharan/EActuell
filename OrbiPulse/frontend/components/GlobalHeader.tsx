@@ -84,21 +84,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statsPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: Radius.full,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
   statsPillLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     color: COLORS.dark,
     opacity: 0.6,
   },
   statsPillValue: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.sm,
     fontWeight: '800',
   },
 });

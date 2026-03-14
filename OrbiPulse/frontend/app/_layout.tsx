@@ -26,31 +26,20 @@ function RootContent() {
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
-        
-        {!isAuthenticated && (
-          <Stack.Screen name="auth/login" />
-        )}
-        
-        {isAuthenticated && (
-          <Stack.Screen name="auth/profile-setup" />
-        )}
-        
-        {isAuthenticated && (
-          <Stack.Screen name="(tabs)" />
-        )}
-        
-        {isAuthenticated && (
-          <Stack.Screen
-            name="valve/[id]"
-            options={{
-              headerShown: true,
-              headerStyle: { backgroundColor: colors.card },
-              headerTintColor: colors.text,
-              headerTitleStyle: { fontWeight: '700' },
-              headerBackTitle: 'Back',
-            }}
-          />
-        )}
+        <Stack.Screen name="auth/login" redirect={isAuthenticated} />
+        <Stack.Screen name="auth/profile-setup" redirect={!isAuthenticated} />
+        <Stack.Screen name="(tabs)" redirect={!isAuthenticated} />
+        <Stack.Screen
+          name="valve/[id]"
+          options={{
+            headerShown: true,
+            headerStyle: { backgroundColor: colors.card },
+            headerTintColor: colors.text,
+            headerTitleStyle: { fontWeight: '700' },
+            headerBackTitle: 'Back',
+          }}
+          redirect={!isAuthenticated}
+        />
       </Stack>
     </View>
   );

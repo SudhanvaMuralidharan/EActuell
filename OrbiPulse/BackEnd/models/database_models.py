@@ -2,23 +2,28 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, JSON
 from sqlalchemy.sql import func
 from config.database import Base
 
+
 class ValveDB(Base):
+    """Maps to network.valves — matches the ACTUAL Supabase schema."""
     __tablename__ = "valves"
     __table_args__ = {"schema": "network"}
 
-    id = Column(String, primary_key=True, index=True)
-    plot_id = Column(String, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String)
+    id = Column(Integer, primary_key=True, index=True)
+    device_id = Column(String, unique=True, index=True, nullable=False)
+    gateway_id = Column(String)
+    zone = Column(String)
     latitude = Column(Float)
     longitude = Column(Float)
-    model_number = Column(String)
+    valve_position = Column(Integer, default=0)       # 0-100
+    battery_voltage = Column(Float)
+    motor_current = Column(Float)
+    temperature = Column(Float)
+    signal_strength = Column(Integer)
     status = Column(String, default="unknown")
-    installed_at = Column(DateTime(timezone=True), server_default=func.now())
-    last_seen = Column(DateTime(timezone=True))
-    is_active = Column(Boolean, default=True)
+
 
 class TelemetryDB(Base):
+    """Maps to telemetry.device_telemetry — matches the ACTUAL Supabase schema."""
     __tablename__ = "device_telemetry"
     __table_args__ = {"schema": "telemetry"}
 
@@ -29,11 +34,14 @@ class TelemetryDB(Base):
     temperature = Column(Float)
     battery_voltage = Column(Float)
     flow_rate = Column(Float)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    pressure = Column(Float)
+    timestamp = Column(DateTime, server_default=func.now())
+
 
 class ScheduleDB(Base):
+    """Schedules — stored locally or in a network.schedules table."""
     __tablename__ = "schedules"
-    __table_args__ = {"schema": "network"}
+    __table_args__ = {"schema": "network", "extend_existing": True}
 
     id = Column(String, primary_key=True, index=True)
     valve_id = Column(String, index=True, nullable=False)
