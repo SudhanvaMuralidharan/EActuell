@@ -1,183 +1,200 @@
-# 🌱 OrbiPulse – Smart Irrigation Monitoring Backend
+# ⚙️ OrbiPulse Backend — Smart Irrigation API
 
-FastAPI backend for the OrbiPulse mobile app — monitors and controls smart irrigation valves installed in agricultural plots.
+FastAPI backend for the OrbiPulse smart irrigation platform. Provides REST endpoints for valve management, telemetry monitoring, alert evaluation, and an autonomous AI agent that detects anomalies and auto-corrects valve positions.
 
 ---
 
-## Quick Start
+## 📁 Structure
 
-### 1. Install dependencies
-```bash
-pip install -r requirements.txt
+```
+BackEnd/
+├── app/
+│   └── main.py              # FastAPI application + startup
+├── ai_agent/
+│   ├── ai_service.py         # AI insight pipeline
+│   ├── anomaly_detector.py   # Anomaly detection logic
+│   └── autonomous_agent.py   # Background monitoring agent
+├── config/
+│   ├── database.py           # Async SQLAlchemy engine + session
+│   └── settings.py           # App settings (env-based)
+├── models/
+│   ├── database_models.py    # SQLAlchemy ORM models (ValveDB, TelemetryDB, ScheduleDB)
+│   ├── valve_model.py        # Pydantic request/response schemas
+│   ├── telemetry_model.py    # Telemetry data schemas
+│   ├── alert_model.py        # Alert schemas
+│   └── user_model.py         # User/auth schemas
+├── routes/
+│   ├── auth_routes.py        # JWT authentication
+│   ├── valve_routes.py       # Valve CRUD + control
+│   ├── telemetry_routes.py   # Telemetry queries
+│   ├── alert_routes.py       # Alert management
+│   ├── schedule_routes.py    # Irrigation scheduling
+│   ├── ai_routes.py          # AI insights endpoints
+│   └── plot_routes.py        # Plot management
+├── services/
+│   ├── valve_service.py      # Valve business logic
+│   ├── telemetry_service.py  # Telemetry data access
+│   ├── alert_service.py      # Alert evaluation engine
+│   ├── auth_service.py       # JWT + user authentication
+│   └── plot_service.py       # Plot management
+├── dataset/                  # Sample telemetry JSON data
+├── requirements.txt          # Python dependencies
+└── .env                      # Environment variables (not committed)
 ```
 
-### 2. Run the server
+---
+
+## 🚀 How to Run
+
+### 1. Set Up Virtual Environment
+
 ```bash
-# From the project root
+cd OrbiPulse/BackEnd
+
+# Create virtual environment
+python -m venv venv
+
+# Activate it
+.\venv\Scripts\activate        # Windows
+# source venv/bin/activate     # macOS/Linux
+```
+
+### 2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+pip install sqlalchemy[asyncio] asyncpg
+```
+
+### 3. Configure Environment
+
+Create a `.env` file in the `BackEnd/` directory:
+
+```env
+DATABASE_URL=postgresql://postgres.xxxxx:password@aws-0-region.pooler.supabase.com:6543/postgres
+DEBUG=True
+```
+
+### 4. Start the Server
+
+```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Open Swagger docs
-```
-http://localhost:8000/docs
-```
+### 5. Access the API
 
-### 4. Authenticate in Swagger
-Click the 🔒 **Authorize** button and enter:
-- **Username:** `farmer1`
-- **Password:** `pass123`
+| URL | Description |
+|-----|------------|
+| http://localhost:8000/ | Health check |
+| http://localhost:8000/docs | Swagger UI (interactive API docs) |
+| http://localhost:8000/health | Liveness probe |
 
 ---
 
-## Project Structure
+## 🔌 API Endpoints
 
-```
-orbipulse-backend/
-├── app/
-│   └── main.py                  # FastAPI app, routers, CORS, startup
-├── config/
-│   └── settings.py              # Pydantic settings, thresholds, JWT config
-├── routes/
-│   ├── auth_routes.py           # POST /login, GET /me
-│   ├── plot_routes.py           # CRUD /plots
-│   ├── valve_routes.py          # CRUD /valves + POST /valves/{id}/control
-│   ├── telemetry_routes.py      # GET /telemetry, /latest, /summary
-│   ├── alert_routes.py          # GET /alerts, PATCH /alerts/{id}/acknowledge
-│   ├── schedule_routes.py       # CRUD /schedules
-│   └── ai_routes.py             # GET /ai/insights, /ai/insights/{valve_id}
-├── services/
-│   ├── auth_service.py          # JWT generation, user lookup
-│   ├── plot_service.py          # Plot CRUD logic
-│   ├── valve_service.py         # Valve CRUD + simulated actuation
-│   ├── telemetry_service.py     # Load & query telemetry dataset
-│   ├── alert_service.py         # Threshold evaluation & alert store
-│   └── scheduler_service.py     # Schedule CRUD + next-run calculation
-├── models/
-│   ├── user_model.py
-│   ├── plot_model.py
-│   ├── valve_model.py
-│   ├── telemetry_model.py
-│   ├── alert_model.py
-│   └── schedule_model.py
-├── ai_agent/
-│   ├── telemetry_analyzer.py    # Step 1 – aggregate telemetry into context
-│   ├── anomaly_detector.py      # Step 2 – rule-based anomaly detection
-│   ├── decision_engine.py       # Step 3 – health score + recommendations
-│   └── ai_service.py            # Step 4 – pipeline orchestrator
-├── utils/
-│   ├── validators.py
-│   └── helpers.py
-├── dataset/
-│   └── telemetry_data.json      # Seed telemetry data for 5 valves
-├── simulator/
-│   └── telemetry_generator.py   # CLI tool to generate more telemetry data
-└── requirements.txt
-```
+All endpoints are prefixed with `/api`.
 
----
-
-## API Endpoints
-
+### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/login` | Authenticate, returns JWT |
-| GET | `/me` | Current user info |
-| GET | `/plots` | List all plots |
-| POST | `/plots` | Create a plot |
-| GET | `/plots/{id}` | Get plot details |
-| GET | `/plots/{id}/valves` | Plot + its valve IDs |
-| PATCH | `/plots/{id}` | Update plot |
-| DELETE | `/plots/{id}` | Delete plot |
-| GET | `/valves?plot_id=` | List valves (filter by plot) |
-| POST | `/valves` | Register a valve |
-| GET | `/valves/{id}` | Get valve details |
-| PATCH | `/valves/{id}` | Update valve |
-| POST | `/valves/{id}/control` | Open or close valve |
-| DELETE | `/valves/{id}` | Delete valve |
-| GET | `/telemetry` | All telemetry (filter by valve_id) |
-| GET | `/telemetry/latest/{valve_id}` | Most recent reading |
-| GET | `/telemetry/summary/{valve_id}` | Aggregated stats |
-| GET | `/telemetry/summaries` | Stats for all valves |
-| GET | `/alerts` | List alerts |
-| POST | `/alerts/evaluate` | Re-run threshold evaluation |
-| PATCH | `/alerts/{id}/acknowledge` | Acknowledge an alert |
-| GET | `/schedules` | List schedules |
-| POST | `/schedules` | Create a schedule |
-| GET | `/schedules/{id}` | Get schedule |
-| PATCH | `/schedules/{id}` | Update schedule |
-| DELETE | `/schedules/{id}` | Delete schedule |
-| GET | `/ai/insights` | AI insights for all valves |
-| GET | `/ai/insights/{valve_id}` | AI insights for one valve |
+| POST | `/api/auth/login` | Login with username/password → JWT token |
+
+### Valves
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/valves` | List all valves (optional `?zone=` filter) |
+| GET | `/api/valves/{device_id}` | Get valve details |
+| POST | `/api/valves` | Register a new valve |
+| PATCH | `/api/valves/{device_id}` | Update valve metadata |
+| POST | `/api/valves/{device_id}/control` | Open/close/set position |
+| DELETE | `/api/valves/{device_id}` | Delete a valve |
+
+### Telemetry
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/telemetry` | Get telemetry records |
+| GET | `/api/telemetry/summary` | Aggregated telemetry summary |
+
+### Alerts
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/alerts` | List alerts |
+| POST | `/api/alerts/{id}/acknowledge` | Acknowledge an alert |
+
+### AI Insights
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/ai/insights` | Get AI insights for all valves |
+| GET | `/api/ai/insights/{device_id}` | Get AI insights for a specific valve |
+
+### Schedules
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/schedules` | List schedules |
+| POST | `/api/schedules` | Create a schedule |
+| DELETE | `/api/schedules/{id}` | Delete a schedule |
 
 ---
 
-## AI Agent Pipeline
+## 🤖 Autonomous AI Agent
 
-```
-Telemetry Records
-      │
-      ▼
-telemetry_analyzer.py   → TelemetryContext (stats, trends)
-      │
-      ▼
-anomaly_detector.py     → AnomalyReport (typed anomalies + severity)
-      │
-      ▼
-decision_engine.py      → ValveDecision (health score, recommendations)
-      │
-      ▼
-ai_service.py           → JSON response (health, anomalies, stats, actions)
-```
+The backend includes a background AI agent that starts automatically on server launch:
 
-### Detectable Anomalies
+- **Runs every 60 seconds** — scans all valves in the database
+- **Detects anomalies** — high pressure, valve blockage, excessive flow
+- **Takes action** — reduces valve position by 15–20% or closes valve entirely
+- **Logs everything** — all actions logged with `[AUTONOMOUS]` prefix
 
-| Anomaly | Trigger |
-|---------|---------|
-| `critical_battery` | Battery ≤ 20% |
-| `low_battery` | Battery ≤ 30% |
-| `battery_draining` | Falling trend + battery < 50% |
-| `high_temperature` | Avg temp > 40°C |
-| `temperature_rising` | Rising trend + temp > 35°C |
-| `abnormal_motor_current` | Avg current > 3A |
-| `valve_blockage` | Low flow + high current (valve open) |
-| `flow_rate_mismatch` | Flow outside 5–25 L/min (valve open) |
-| `low_pressure` | Pressure < 1.0 bar |
-| `high_pressure` | Pressure > 4.0 bar |
-| `weak_signal` | Signal < -80 dBm |
+The agent can be tuned via the `interval_seconds` parameter in `autonomous_agent.py`.
 
 ---
 
-## Telemetry Simulator
+## 🗄️ Database Schema
 
-Generate additional telemetry records:
+The backend connects to a **Supabase PostgreSQL** database with the following tables:
 
-```bash
-# Generate 20 records for all default valves
-python simulator/telemetry_generator.py --records 20
+### `network.valves`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| device_id | varchar | Unique valve identifier |
+| gateway_id | varchar | Associated gateway |
+| zone | varchar | Geographic zone |
+| latitude / longitude | float | GPS coordinates |
+| valve_position | integer | Current position (0–100%) |
+| battery_voltage | float | Battery level |
+| motor_current | float | Motor current draw |
+| temperature | float | Internal temperature |
+| signal_strength | integer | Signal strength (dBm) |
+| status | varchar | open/closed/partial/fault/offline |
 
-# Generate for specific valves
-python simulator/telemetry_generator.py --valves valve_001 valve_004 --records 15 --interval 10
-```
+### `telemetry.device_telemetry`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| device_id | varchar | Valve identifier |
+| position | integer | Valve position at reading time |
+| motor_current | float | Current draw |
+| temperature | float | Temperature reading |
+| battery_voltage | float | Battery voltage |
+| flow_rate | float | Water flow rate |
+| pressure | float | Water pressure |
+| timestamp | datetime | Reading timestamp |
 
 ---
 
-## Configuration
+## 🔐 Demo Credentials
 
-All thresholds and settings live in `config/settings.py`. Override via `.env`:
+| Username | Password |
+|----------|----------|
+| farmer1 | pass123 |
+| farmer2 | pass123 |
 
-```env
-SECRET_KEY=your-production-secret
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-DATASET_PATH=/path/to/custom/telemetry.json
-```
+Use Swagger UI at `/docs` → click **Authorize** 🔒 → enter credentials.
 
 ---
 
-## Demo Data
+## 📄 License
 
-The system seeds the following on startup:
-
-**Plots:** North Field · South Orchard · Greenhouse A  
-**Valves:** valve_001–005 (each with distinct telemetry profiles)  
-**Alerts:** Auto-generated from telemetry at startup  
-**Users:** farmer1 / farmer2 (password: `pass123`)
+MIT
